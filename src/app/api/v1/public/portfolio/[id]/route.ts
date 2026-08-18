@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PortfolioService } from '@/lib/services/portfolio.service';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -21,9 +22,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
       success: true,
       data: item,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve public portfolio item' },
+      { error: getErrorMessage(error, 'Failed to retrieve public portfolio item') },
       { status: 500 }
     );
   }

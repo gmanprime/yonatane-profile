@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { passkeyVerifySchema } from '@/lib/validators/auth.validator';
 import { AuthService } from '@/lib/services/auth.service';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,9 +33,9 @@ export async function POST(req: NextRequest) {
       credentialId: credential.id,
       user: currentUser?.dbUser || null,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Passkey verification failed' },
+      { error: getErrorMessage(error, 'Passkey verification failed') },
       { status: 500 }
     );
   }

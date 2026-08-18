@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ContentService } from '@/lib/services/content.service';
 import { createSectionSchema } from '@/lib/validators/content.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ contentId: string }>;
@@ -18,9 +19,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
     const sections = await ContentService.getSections(contentId);
 
     return NextResponse.json({ sections });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve sections' },
+      { error: getErrorMessage(error, 'Failed to retrieve sections') },
       { status: 500 }
     );
   }
@@ -46,9 +47,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     const section = await ContentService.createSection(contentId, parsed.data);
     return NextResponse.json({ section }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to create section' },
+      { error: getErrorMessage(error, 'Failed to create section') },
       { status: 500 }
     );
   }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ProfileService } from '@/lib/services/profile.service';
 import { updateProfileSectionsSchema } from '@/lib/validators/profile.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -18,9 +19,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
     const sections = await ProfileService.getProfileSections(id);
 
     return NextResponse.json({ sections });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve profile sections' },
+      { error: getErrorMessage(error, 'Failed to retrieve profile sections') },
       { status: 500 }
     );
   }
@@ -46,9 +47,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 
     await ProfileService.updateProfileSections(id, parsed.data.sections);
     return NextResponse.json({ success: true, message: 'Profile sections updated successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to update profile sections' },
+      { error: getErrorMessage(error, 'Failed to update profile sections') },
       { status: 500 }
     );
   }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { PortfolioService } from '@/lib/services/portfolio.service';
 import { updatePortfolioItemSchema } from '@/lib/validators/portfolio.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -22,9 +23,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ item });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve portfolio item' },
+      { error: getErrorMessage(error, 'Failed to retrieve portfolio item') },
       { status: 500 }
     );
   }
@@ -55,9 +56,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ item: updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to update portfolio item' },
+      { error: getErrorMessage(error, 'Failed to update portfolio item') },
       { status: 500 }
     );
   }
@@ -78,9 +79,9 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ success: true, message: 'Portfolio item deleted successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to delete portfolio item' },
+      { error: getErrorMessage(error, 'Failed to delete portfolio item') },
       { status: 500 }
     );
   }

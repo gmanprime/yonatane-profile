@@ -5,7 +5,6 @@ import {
   contentDatasets,
   sections,
   sectionItems,
-  themes,
   type Profile,
   type ProfileSection,
 } from '@/lib/db/schema';
@@ -20,7 +19,7 @@ import { nanoid } from 'nanoid';
 
 export interface ResolvedProfileItem {
   id: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   displayOrder: number;
 }
 
@@ -42,10 +41,10 @@ export interface ResolvedProfile {
     hash: string;
     isDefault: boolean;
   };
-  basics: Record<string, any>;
+  basics: Record<string, unknown>;
   summary: string;
-  picture: Record<string, any>;
-  theme: Record<string, any>;
+  picture: Record<string, unknown>;
+  theme: Record<string, unknown>;
   sections: ResolvedProfileSection[];
 }
 
@@ -254,11 +253,11 @@ export class ProfileService {
     }
 
     // Fetch theme
-    let themeConfig = SYSTEM_DEFAULT_THEME_CONFIG;
+    let themeConfig: Record<string, unknown> = SYSTEM_DEFAULT_THEME_CONFIG as Record<string, unknown>;
     if (profileRecord.themeId) {
       const theme = await ThemeService.getThemeById(profileRecord.themeId);
       if (theme) {
-        themeConfig = theme.config as any;
+        themeConfig = theme.config as Record<string, unknown>;
       }
     }
 
@@ -351,7 +350,7 @@ export class ProfileService {
         })
         .map((item) => ({
           id: item.id,
-          data: item.data as Record<string, any>,
+          data: item.data as Record<string, unknown>,
           displayOrder: item.displayOrder,
         }));
 
@@ -377,9 +376,9 @@ export class ProfileService {
         hash: profileRecord.hash,
         isDefault: profileRecord.isDefault,
       },
-      basics: (dataset.basics as Record<string, any>) || {},
+      basics: (dataset.basics as Record<string, unknown>) || {},
       summary: dataset.summary || '',
-      picture: (dataset.picture as Record<string, any>) || {},
+      picture: (dataset.picture as Record<string, unknown>) || {},
       theme: themeConfig,
       sections: resolvedSections,
     };

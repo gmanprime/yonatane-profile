@@ -10,18 +10,18 @@ export interface ParsedSection {
   hidden: boolean;
   displayOrder: number;
   items: Array<{
-    data: Record<string, any>;
+    data: Record<string, unknown>;
     hidden: boolean;
     displayOrder: number;
   }>;
 }
 
 export interface ParsedResumeResult {
-  basics: Record<string, any>;
+  basics: Record<string, unknown>;
   summary: string;
-  picture: Record<string, any>;
+  picture: Record<string, unknown>;
   sections: ParsedSection[];
-  rawJson: any;
+  rawJson: unknown;
 }
 
 export class ImportService {
@@ -29,9 +29,9 @@ export class ImportService {
    * Parses standard RxResume JSON format (Reactive Resume v4/v5).
    */
   static parseRxResume(data: RxResumeData): ParsedResumeResult {
-    const basics = data.basics || {};
+    const basics = (data.basics || {}) as Record<string, unknown>;
     const summary = data.summary?.content || '';
-    const picture = data.picture || {};
+    const picture = (data.picture || {}) as Record<string, unknown>;
     const parsedSections: ParsedSection[] = [];
 
     const sectionDict = data.sections || {};
@@ -42,7 +42,7 @@ export class ImportService {
       if (!section) return;
 
       const items = (section.items || []).map((item, itemIdx) => ({
-        data: item,
+        data: item as Record<string, unknown>,
         hidden: item.hidden ?? false,
         displayOrder: itemIdx,
       }));
@@ -72,17 +72,17 @@ export class ImportService {
    */
   static parseJsonResume(data: JsonResumeData): ParsedResumeResult {
     const b = data.basics || {};
-    const basics: Record<string, any> = {
+    const basics: Record<string, unknown> = {
       name: b.name || '',
       headline: b.label || '',
       email: b.email || '',
       phone: b.phone || '',
-      location: typeof b.location === 'object' ? `${b.location.city || ''}, ${b.location.countryCode || ''}` : b.location || '',
+      location: typeof b.location === 'object' ? `${(b.location as { city?: string; countryCode?: string })?.city || ''}, ${(b.location as { city?: string; countryCode?: string })?.countryCode || ''}` : b.location || '',
       website: typeof b.url === 'string' ? { url: b.url, label: 'Website' } : b.url || '',
       customFields: [],
     };
 
-    const picture = {
+    const picture: Record<string, unknown> = {
       hidden: !b.image,
       url: b.image || '',
     };
@@ -100,7 +100,7 @@ export class ImportService {
         columns: 2,
         hidden: false,
         displayOrder: order++,
-        items: b.profiles.map((p, idx) => ({
+        items: b.profiles.map((p: Record<string, unknown>, idx: number) => ({
           data: {
             network: p.network || '',
             username: p.username || '',
@@ -121,14 +121,14 @@ export class ImportService {
         columns: 1,
         hidden: false,
         displayOrder: order++,
-        items: data.work.map((w, idx) => ({
+        items: data.work.map((w: Record<string, unknown>, idx: number) => ({
           data: {
             company: w.name || w.company || '',
             position: w.position || '',
             location: w.location || '',
-            period: `${w.startDate || ''} - ${w.endDate || (w.isCurrentRole ? 'Present' : '')}`,
-            website: { url: w.url || '', label: w.name || '' },
-            description: w.summary || (Array.isArray(w.highlights) ? `<ul>${w.highlights.map((h: string) => `<li>${h}</li>`).join('')}</ul>` : ''),
+            period: `${(w.startDate as string) || ''} - ${(w.endDate as string) || (w.isCurrentRole ? 'Present' : '')}`,
+            website: { url: (w.url as string) || '', label: (w.name as string) || '' },
+            description: (w.summary as string) || (Array.isArray(w.highlights) ? `<ul>${(w.highlights as string[]).map((h: string) => `<li>${h}</li>`).join('')}</ul>` : ''),
             roles: [],
           },
           hidden: false,
@@ -146,16 +146,16 @@ export class ImportService {
         columns: 1,
         hidden: false,
         displayOrder: order++,
-        items: data.education.map((e, idx) => ({
+        items: data.education.map((e: Record<string, unknown>, idx: number) => ({
           data: {
             school: e.institution || '',
             degree: e.studyType || '',
             area: e.area || '',
             grade: e.score || '',
             location: e.location || '',
-            period: `${e.startDate || ''} - ${e.endDate || ''}`,
-            website: { url: e.url || '', label: e.institution || '' },
-            description: Array.isArray(e.courses) ? `<p>Courses: ${e.courses.join(', ')}</p>` : '',
+            period: `${(e.startDate as string) || ''} - ${(e.endDate as string) || ''}`,
+            website: { url: (e.url as string) || '', label: (e.institution as string) || '' },
+            description: Array.isArray(e.courses) ? `<p>Courses: ${(e.courses as string[]).join(', ')}</p>` : '',
           },
           hidden: false,
           displayOrder: idx,
@@ -172,12 +172,12 @@ export class ImportService {
         columns: 1,
         hidden: false,
         displayOrder: order++,
-        items: data.projects.map((p, idx) => ({
+        items: data.projects.map((p: Record<string, unknown>, idx: number) => ({
           data: {
             name: p.name || '',
-            period: `${p.startDate || ''} - ${p.endDate || ''}`,
-            website: { url: p.url || '', label: p.name || '' },
-            description: p.description || (Array.isArray(p.highlights) ? `<ul>${p.highlights.map((h: string) => `<li>${h}</li>`).join('')}</ul>` : ''),
+            period: `${(p.startDate as string) || ''} - ${(p.endDate as string) || ''}`,
+            website: { url: (p.url as string) || '', label: (p.name as string) || '' },
+            description: (p.description as string) || (Array.isArray(p.highlights) ? `<ul>${(p.highlights as string[]).map((h: string) => `<li>${h}</li>`).join('')}</ul>` : ''),
           },
           hidden: false,
           displayOrder: idx,
@@ -194,7 +194,7 @@ export class ImportService {
         columns: 1,
         hidden: false,
         displayOrder: order++,
-        items: data.skills.map((s, idx) => ({
+        items: data.skills.map((s: Record<string, unknown>, idx: number) => ({
           data: {
             name: s.name || '',
             proficiency: s.level || '',
@@ -216,7 +216,7 @@ export class ImportService {
         columns: 2,
         hidden: false,
         displayOrder: order++,
-        items: data.languages.map((l, idx) => ({
+        items: data.languages.map((l: Record<string, unknown>, idx: number) => ({
           data: {
             language: l.language || '',
             fluency: l.fluency || '',
@@ -239,17 +239,22 @@ export class ImportService {
   /**
    * Automatically detects format (RxResume or JSON Resume) and parses.
    */
-  static parse(rawData: any, type: 'rxresume' | 'jsonresume' | 'auto' = 'auto'): ParsedResumeResult {
+  static parse(rawData: Record<string, unknown>, type: 'rxresume' | 'jsonresume' | 'auto' = 'auto'): ParsedResumeResult {
     if (type === 'rxresume' || (type === 'auto' && rawData.sections && typeof rawData.sections === 'object' && !Array.isArray(rawData.sections))) {
-      return this.parseRxResume(rawData);
+      return this.parseRxResume(rawData as unknown as RxResumeData);
     }
-    return this.parseJsonResume(rawData);
+    return this.parseJsonResume(rawData as unknown as JsonResumeData);
   }
 
   /**
    * Imports a parsed resume into the PostgreSQL database under a given User.
    */
-  static async importResumeToDatabase(userId: string, datasetName: string, rawData: any, type: 'rxresume' | 'jsonresume' | 'auto' = 'auto') {
+  static async importResumeToDatabase(
+    userId: string,
+    datasetName: string,
+    rawData: Record<string, unknown>,
+    type: 'rxresume' | 'jsonresume' | 'auto' = 'auto'
+  ) {
     const parsed = this.parse(rawData, type);
 
     return await db.transaction(async (tx) => {

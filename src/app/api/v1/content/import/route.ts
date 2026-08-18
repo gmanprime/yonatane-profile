@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ImportService } from '@/lib/services/import.service';
 import { importPayloadSchema } from '@/lib/validators/rxresume.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,14 +25,14 @@ export async function POST(req: NextRequest) {
     const dataset = await ImportService.importResumeToDatabase(
       auth.dbUser.id,
       name,
-      data,
+      data as Record<string, unknown>,
       type
     );
 
     return NextResponse.json({ success: true, dataset }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Import failed' },
+      { error: getErrorMessage(error, 'Import failed') },
       { status: 500 }
     );
   }

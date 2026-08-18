@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,9 +9,9 @@ export async function GET(req: NextRequest) {
 
     const url = await AuthService.getGoogleOAuthUrl(redirectTo);
     return NextResponse.redirect(url);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to initiate Google OAuth' },
+      { error: getErrorMessage(error, 'Failed to initiate Google OAuth') },
       { status: 500 }
     );
   }
@@ -23,9 +24,9 @@ export async function POST(req: NextRequest) {
 
     const url = await AuthService.getGoogleOAuthUrl(redirectTo);
     return NextResponse.json({ url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to initiate Google OAuth' },
+      { error: getErrorMessage(error, 'Failed to initiate Google OAuth') },
       { status: 500 }
     );
   }

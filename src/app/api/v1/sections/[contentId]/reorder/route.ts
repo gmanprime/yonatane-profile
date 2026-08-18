@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ContentService } from '@/lib/services/content.service';
 import { reorderSectionsSchema } from '@/lib/validators/content.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ contentId: string }>;
@@ -27,9 +28,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 
     await ContentService.reorderSections(contentId, parsed.data.sectionIds);
     return NextResponse.json({ success: true, message: 'Sections reordered successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to reorder sections' },
+      { error: getErrorMessage(error, 'Failed to reorder sections') },
       { status: 500 }
     );
   }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { PortfolioService } from '@/lib/services/portfolio.service';
 import { createPortfolioItemSchema } from '@/lib/validators/portfolio.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,9 +24,9 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ items });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve portfolio items' },
+      { error: getErrorMessage(error, 'Failed to retrieve portfolio items') },
       { status: 500 }
     );
   }
@@ -50,9 +51,9 @@ export async function POST(req: NextRequest) {
 
     const item = await PortfolioService.createPortfolioItem(auth.dbUser.id, parsed.data);
     return NextResponse.json({ item }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to create portfolio item' },
+      { error: getErrorMessage(error, 'Failed to create portfolio item') },
       { status: 500 }
     );
   }

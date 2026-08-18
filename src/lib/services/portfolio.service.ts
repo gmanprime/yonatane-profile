@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { portfolioItems, sectionItems, type PortfolioItem } from '@/lib/db/schema';
+import { portfolioItems, type PortfolioItem } from '@/lib/db/schema';
 import {
   type CreatePortfolioItemInput,
   type UpdatePortfolioItemInput,
@@ -88,7 +88,7 @@ export class PortfolioService {
     userId: string,
     input: UpdatePortfolioItemInput
   ): Promise<PortfolioItem | null> {
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       ...input,
       updatedAt: new Date(),
     };

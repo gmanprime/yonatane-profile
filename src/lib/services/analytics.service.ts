@@ -22,7 +22,7 @@ export class AnalyticsService {
   /**
    * Lightweight user agent parser to extract device type, browser, and OS without external bloated dependencies.
    */
-  static parseUserAgent(ua: string = '') {
+  static parseUserAgent(ua = '') {
     let deviceType = 'desktop';
     let browser = 'Other';
     let os = 'Other';
@@ -258,7 +258,7 @@ export class AnalyticsService {
       'User Agent',
     ];
 
-    const escapeCSV = (val: any) => {
+    const escapeCSV = (val: unknown) => {
       if (val === null || val === undefined) return '';
       const str = String(val);
       if (str.includes(',') || str.includes('"') || str.includes('\n')) {

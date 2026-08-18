@@ -71,7 +71,12 @@ export class ThemeService {
         .limit(1);
 
       if (userDefault) {
-        return userDefault as any;
+        return {
+          id: userDefault.id,
+          name: userDefault.name,
+          isDefault: userDefault.isDefault,
+          config: userDefault.config as ThemeConfig,
+        };
       }
     }
 

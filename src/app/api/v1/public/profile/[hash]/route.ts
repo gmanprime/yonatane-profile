@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProfileService } from '@/lib/services/profile.service';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ hash: string }>;
@@ -21,9 +22,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
       success: true,
       data: resolvedProfile,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to resolve public profile' },
+      { error: getErrorMessage(error, 'Failed to resolve public profile') },
       { status: 500 }
     );
   }

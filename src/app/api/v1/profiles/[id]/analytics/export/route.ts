@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { AnalyticsService } from '@/lib/services/analytics.service';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -25,9 +26,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to export analytics CSV' },
+      { error: getErrorMessage(error, 'Failed to export analytics CSV') },
       { status: 500 }
     );
   }

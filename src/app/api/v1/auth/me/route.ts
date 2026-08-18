@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function GET() {
   try {
@@ -21,9 +22,9 @@ export async function GET() {
         createdAt: userContext.dbUser.createdAt,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch user' },
+      { error: getErrorMessage(error, 'Failed to fetch user') },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { loginSchema } from '@/lib/validators/auth.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,9 +26,9 @@ export async function POST(req: NextRequest) {
       },
       session: result.session,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Authentication failed' },
+      { error: getErrorMessage(error, 'Authentication failed') },
       { status: 401 }
     );
   }

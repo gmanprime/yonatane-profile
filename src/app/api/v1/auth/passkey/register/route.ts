@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { passkeyRegisterOptionsSchema } from '@/lib/validators/auth.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,18 +35,18 @@ export async function POST(req: NextRequest) {
         { alg: -257, type: 'public-key' }, // RS256
       ],
       authenticatorSelection: {
-        authenticatorAttachment: 'platform',
-        userVerification: 'preferred',
-        residentKey: 'preferred',
+        authenticatorAttachment: 'platform' as const,
+        userVerification: 'preferred' as const,
+        residentKey: 'preferred' as const,
       },
       timeout: 60000,
-      attestation: 'none',
+      attestation: 'none' as const,
     };
 
     return NextResponse.json({ options });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to generate passkey options' },
+      { error: getErrorMessage(error, 'Failed to generate passkey options') },
       { status: 500 }
     );
   }

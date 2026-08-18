@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ThemeService } from '@/lib/services/theme.service';
 import { createThemeSchema } from '@/lib/validators/theme.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function GET() {
   try {
@@ -12,9 +13,9 @@ export async function GET() {
 
     const themeList = await ThemeService.getThemes(auth.dbUser.id);
     return NextResponse.json({ themes: themeList });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve themes' },
+      { error: getErrorMessage(error, 'Failed to retrieve themes') },
       { status: 500 }
     );
   }
@@ -39,9 +40,9 @@ export async function POST(req: NextRequest) {
 
     const theme = await ThemeService.createTheme(auth.dbUser.id, parsed.data);
     return NextResponse.json({ theme }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to create theme' },
+      { error: getErrorMessage(error, 'Failed to create theme') },
       { status: 500 }
     );
   }

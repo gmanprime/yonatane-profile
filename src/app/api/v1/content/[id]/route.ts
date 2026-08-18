@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ContentService } from '@/lib/services/content.service';
 import { updateContentDatasetSchema } from '@/lib/validators/content.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -22,9 +23,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ dataset });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve dataset' },
+      { error: getErrorMessage(error, 'Failed to retrieve dataset') },
       { status: 500 }
     );
   }
@@ -55,9 +56,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ dataset: updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to update dataset' },
+      { error: getErrorMessage(error, 'Failed to update dataset') },
       { status: 500 }
     );
   }
@@ -78,9 +79,9 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ success: true, message: 'Dataset deleted successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to delete dataset' },
+      { error: getErrorMessage(error, 'Failed to delete dataset') },
       { status: 500 }
     );
   }

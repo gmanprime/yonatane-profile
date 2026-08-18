@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ProfileService } from '@/lib/services/profile.service';
 import { updateProfileSchema } from '@/lib/validators/profile.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -22,9 +23,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ profile });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve profile' },
+      { error: getErrorMessage(error, 'Failed to retrieve profile') },
       { status: 500 }
     );
   }
@@ -55,9 +56,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ profile: updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to update profile' },
+      { error: getErrorMessage(error, 'Failed to update profile') },
       { status: 500 }
     );
   }
@@ -78,9 +79,9 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ success: true, message: 'Profile deleted successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to delete profile' },
+      { error: getErrorMessage(error, 'Failed to delete profile') },
       { status: 500 }
     );
   }

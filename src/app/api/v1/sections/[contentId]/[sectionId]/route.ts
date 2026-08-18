@@ -5,6 +5,7 @@ import {
   updateSectionSchema,
   createSectionItemSchema,
 } from '@/lib/validators/content.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface RouteContext {
   params: Promise<{ contentId: string; sectionId: string }>;
@@ -25,9 +26,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ section });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve section' },
+      { error: getErrorMessage(error, 'Failed to retrieve section') },
       { status: 500 }
     );
   }
@@ -58,9 +59,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ section: updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to update section' },
+      { error: getErrorMessage(error, 'Failed to update section') },
       { status: 500 }
     );
   }
@@ -81,9 +82,9 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ success: true, message: 'Section deleted successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to delete section' },
+      { error: getErrorMessage(error, 'Failed to delete section') },
       { status: 500 }
     );
   }
@@ -110,9 +111,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     const item = await ContentService.createSectionItem(sectionId, parsed.data);
     return NextResponse.json({ item }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to create section item' },
+      { error: getErrorMessage(error, 'Failed to create section item') },
       { status: 500 }
     );
   }

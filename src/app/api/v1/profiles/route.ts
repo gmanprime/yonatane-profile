@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/services/auth.service';
 import { ProfileService } from '@/lib/services/profile.service';
 import { createProfileSchema } from '@/lib/validators/profile.validator';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export async function GET() {
   try {
@@ -12,9 +13,9 @@ export async function GET() {
 
     const profileList = await ProfileService.getProfiles(auth.dbUser.id);
     return NextResponse.json({ profiles: profileList });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to retrieve profiles' },
+      { error: getErrorMessage(error, 'Failed to retrieve profiles') },
       { status: 500 }
     );
   }
@@ -39,9 +40,9 @@ export async function POST(req: NextRequest) {
 
     const profile = await ProfileService.createProfile(auth.dbUser.id, parsed.data);
     return NextResponse.json({ profile }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Failed to create profile' },
+      { error: getErrorMessage(error, 'Failed to create profile') },
       { status: 500 }
     );
   }
