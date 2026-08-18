@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const datasets = await ContentService.getDatasets(auth.dbUser.id);
+    const datasets = await ContentService.getDatasetsWithStats(auth.dbUser.id);
     return NextResponse.json({ datasets });
   } catch (error: unknown) {
     return NextResponse.json(

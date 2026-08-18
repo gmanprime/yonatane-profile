@@ -58,6 +58,28 @@ export class ImportService {
       });
     });
 
+    if (Array.isArray((data as Record<string, unknown>).customSections)) {
+      const customSections = (data as Record<string, unknown>).customSections as Array<Record<string, unknown>>;
+      customSections.forEach((cSec, cIdx) => {
+        if (!cSec) return;
+        const items = (Array.isArray(cSec.items) ? cSec.items : []).map((item, itemIdx) => ({
+          data: item as Record<string, unknown>,
+          hidden: (item as Record<string, unknown>)?.hidden === true,
+          displayOrder: itemIdx,
+        }));
+
+        parsedSections.push({
+          type: (cSec.id as string) || 'custom',
+          title: (cSec.title as string) || 'Custom Section',
+          icon: (cSec.icon as string) || '',
+          columns: typeof cSec.columns === 'number' ? cSec.columns : 1,
+          hidden: cSec.hidden === true,
+          displayOrder: sectionKeys.length + cIdx,
+          items,
+        });
+      });
+    }
+
     return {
       basics,
       summary,

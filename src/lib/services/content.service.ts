@@ -3,6 +3,7 @@ import {
   contentDatasets,
   sections,
   sectionItems,
+  profiles,
   type ContentDataset,
   type Section,
   type SectionItem,
@@ -17,6 +18,22 @@ import {
 } from '@/lib/validators/content.validator';
 import { and, asc, eq } from 'drizzle-orm';
 
+export interface DatasetWithStats {
+  id: string;
+  userId: string;
+  name: string;
+  basics: unknown;
+  summary: string | null;
+  picture: unknown;
+  rawJson: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+  sectionsCount: number;
+  itemsCount: number;
+  sectionTypes: string[];
+  isPrimary: boolean;
+}
+
 export class ContentService {
   // ============================================================
   // CONTENT DATASETS
@@ -28,6 +45,52 @@ export class ContentService {
       .from(contentDatasets)
       .where(eq(contentDatasets.userId, userId))
       .orderBy(asc(contentDatasets.createdAt));
+  }
+
+  static async getDatasetsWithStats(userId: string): Promise<DatasetWithStats[]> {
+    const rawDatasets = await db.query.contentDatasets.findMany({
+      where: eq(contentDatasets.userId, userId),
+      orderBy: [asc(contentDatasets.createdAt)],
+      with: {
+        sections: {
+          with: {
+            items: {
+              columns: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Check user's default profile to determine primary dataset
+    const defaultProfile = await db.query.profiles.findFirst({
+      where: and(eq(profiles.userId, userId), eq(profiles.isDefault, true)),
+    });
+
+    return rawDatasets.map((ds) => {
+      const sectionsCount = ds.sections.length;
+      const itemsCount = ds.sections.reduce((acc, s) => acc + s.items.length, 0);
+      const sectionTypes = ds.sections.map((s) => s.type);
+      const isPrimary = defaultProfile?.contentDatasetId === ds.id;
+
+      return {
+        id: ds.id,
+        userId: ds.userId,
+        name: ds.name,
+        basics: ds.basics,
+        summary: ds.summary,
+        picture: ds.picture,
+        rawJson: ds.rawJson,
+        createdAt: ds.createdAt,
+        updatedAt: ds.updatedAt,
+        sectionsCount,
+        itemsCount,
+        sectionTypes,
+        isPrimary,
+      };
+    });
   }
 
   static async getDatasetById(id: string, userId?: string) {
@@ -93,6 +156,90 @@ export class ContentService {
       .returning({ id: contentDatasets.id });
 
     return !!deleted;
+  }
+
+  static async duplicateDataset(id: string, userId: string, customName?: string) {
+    const source = await this.getDatasetById(id, userId);
+    if (!source) return null;
+
+    const newName = customName || `${source.name} (Copy)`;
+
+    return await db.transaction(async (tx) => {
+      const [newDataset] = await tx
+        .insert(contentDatasets)
+        .values({
+          userId,
+          name: newName,
+          rawJson: source.rawJson,
+          basics: source.basics,
+          summary: source.summary,
+          picture: source.picture,
+        })
+        .returning();
+
+      for (const section of source.sections) {
+        const [newSection] = await tx
+          .insert(sections)
+          .values({
+            contentDatasetId: newDataset.id,
+            type: section.type,
+            title: section.title,
+            icon: section.icon,
+            columns: section.columns,
+            hidden: section.hidden,
+            displayOrder: section.displayOrder,
+          })
+          .returning();
+
+        if (section.items && section.items.length > 0) {
+          await tx.insert(sectionItems).values(
+            section.items.map((item) => ({
+              sectionId: newSection.id,
+              data: item.data,
+              hidden: item.hidden,
+              displayOrder: item.displayOrder,
+            }))
+          );
+        }
+      }
+
+      return newDataset;
+    });
+  }
+
+  static async setPrimaryDataset(datasetId: string, userId: string): Promise<boolean> {
+    const dataset = await db.query.contentDatasets.findFirst({
+      where: and(eq(contentDatasets.id, datasetId), eq(contentDatasets.userId, userId)),
+    });
+
+    if (!dataset) return false;
+
+    // Check if default profile exists
+    const defaultProfile = await db.query.profiles.findFirst({
+      where: and(eq(profiles.userId, userId), eq(profiles.isDefault, true)),
+    });
+
+    if (defaultProfile) {
+      await db
+        .update(profiles)
+        .set({
+          contentDatasetId: datasetId,
+          updatedAt: new Date(),
+        })
+        .where(eq(profiles.id, defaultProfile.id));
+    } else {
+      // Create a default profile
+      await db.insert(profiles).values({
+        userId,
+        name: 'Default Public Profile',
+        description: 'Primary public profile',
+        hash: 'default',
+        isDefault: true,
+        contentDatasetId: datasetId,
+      });
+    }
+
+    return true;
   }
 
   // ============================================================
