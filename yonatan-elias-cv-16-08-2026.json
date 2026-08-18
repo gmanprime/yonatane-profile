@@ -1,0 +1,677 @@
+{
+  "picture": {
+    "hidden": false,
+    "url": "https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg",
+    "size": 64,
+    "rotation": 0,
+    "aspectRatio": 1,
+    "borderRadius": 100,
+    "borderColor": "rgba(0, 0, 0, 0)",
+    "borderWidth": 0,
+    "shadowColor": "rgba(0, 0, 0, 0.5)",
+    "shadowWidth": 0
+  },
+  "basics": {
+    "name": "Yonatan Elias",
+    "headline": "Computational Data Scientist & Full-Stack Developer",
+    "email": "yonatane504@gmail.com",
+    "phone": "(+251) 913448915",
+    "location": "Addis Ababa, Ethiopia",
+    "website": {
+      "url": "https://github.com/gmanprime",
+      "label": "GitHub"
+    },
+    "customFields": [
+      {
+        "id": "cf-passport",
+        "icon": "address-book-tabs",
+        "text": "American Citizen",
+        "link": ""
+      },
+      {
+        "id": "cf-dob",
+        "icon": "calendar",
+        "text": "9 May 1997",
+        "link": ""
+      },
+      {
+        "id": "01a00b0c-0755-71bd-93c5-c5f16611be2b",
+        "icon": "compass",
+        "text": "Silver Spring, Maryland, United States",
+        "link": ""
+      }
+    ]
+  },
+  "summary": {
+    "title": "Summary",
+    "icon": "",
+    "columns": 1,
+    "hidden": false,
+    "keepTogether": false,
+    "startOnNewPage": false,
+    "content": "<p>I am a Computational Data Scientist and full-stack developer with a foundational background in Electrical Control Engineering. I focus on building practical, efficiency-driven tools to solve complex technical problems. Having recently completed my Master's—where I specialized in custom deep learning architectures—I thrive at the intersection of data science and systems engineering. Whether I am automating heavy GIS workflows to save months of manual labor, or engineering machine learning frameworks from the ground up, I am a self-driven developer who values functional, high-impact solutions.</p>"
+  },
+  "sections": {
+    "profiles": {
+      "title": "Profiles",
+      "icon": "",
+      "columns": 2,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "prof-linkedin",
+          "hidden": false,
+          "icon": "linkedin-logo",
+          "iconColor": "rgba(0, 0, 0, 1)",
+          "network": "LinkedIn",
+          "username": "yonatane504",
+          "website": {
+            "url": "https://www.linkedin.com/in/yonatane504/",
+            "label": "LinkedIn Profile",
+            "inlineLink": true
+          }
+        },
+        {
+          "id": "prof-github",
+          "hidden": false,
+          "icon": "github-logo",
+          "iconColor": "rgba(0, 0, 0, 1)",
+          "network": "GitHub",
+          "username": "gmanprime",
+          "website": {
+            "url": "https://github.com/gmanprime",
+            "label": "GitHub Profile",
+            "inlineLink": true
+          }
+        }
+      ]
+    },
+    "experience": {
+      "title": "Experience",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "exp-1",
+          "hidden": false,
+          "company": "Institute of Geophysics, Space Science and Astronomy (IGSSA), AAU",
+          "position": "GNSS Data & Systems Engineering Support",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "19/07/2026 - 29/07/2026",
+          "website": {
+            "url": "https://aau.edu.et",
+            "label": "AAU Homepage",
+            "inlineLink": false
+          },
+          "description": "<ul><li>Architected and deployed a makeshift GNSS server to support departmental geophysics and space science research operations.</li><li>Executed structured data entry and quality-assurance processing for raw GNSS datasets to ensure accuracy for downstream academic analysis.</li></ul>",
+          "roles": []
+        },
+        {
+          "id": "exp-2",
+          "hidden": false,
+          "company": "MIYA WATER",
+          "position": "GIS Data Expert",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "17/10/2022 - 06/11/2023",
+          "website": {
+            "url": "https://miya-water.com/",
+            "label": "MIYA water homepage",
+            "inlineLink": false
+          },
+          "description": "<ul><li>Extracted and preprocessed geospatial data from Google Maps and related services for data reduction and manager reports.</li><li>Programmed automation scripts for task-specific preprocessing and management of large datasets.</li><li>Assisted in building GIS pipelines, managing an Oracle OS GIS database, and writing custom query scripts for data calls.</li></ul>",
+          "roles": []
+        },
+        {
+          "id": "exp-3",
+          "hidden": false,
+          "company": "iCog Labs",
+          "position": "Intern",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "03/2020 - 03/2022",
+          "website": {
+            "url": "https://icog-labs.com/",
+            "label": "iCog Labs Hompage",
+            "inlineLink": false
+          },
+          "description": "<ul><li>Gained working education on the practical applications of AI in industrial environments.</li><li>Executed technical documentation and time-intensive operational tasks supporting lab projects.</li></ul>",
+          "roles": []
+        }
+      ]
+    },
+    "education": {
+      "title": "Education",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "edu-1",
+          "hidden": false,
+          "school": "Addis Ababa University",
+          "degree": "Master of Science (MSc)",
+          "area": "Computational Data Science",
+          "grade": "3.89 / 4.0 (EQF Level 7)",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "28/02/2023 - 23/07/2026",
+          "website": {
+            "url": "https://www.aau.edu.et",
+            "label": "Website",
+            "inlineLink": true
+          },
+          "description": "<p><strong>Thesis:</strong> U-Net GAN based Temperature Data Super-Resolution as applied to urban heat island characterization.</p>"
+        },
+        {
+          "id": "edu-2",
+          "hidden": false,
+          "school": "Addis Ababa Institute of Technology, Addis Ababa University",
+          "degree": "Bachelor of Science (BSc)",
+          "area": "Electrical and Computer Engineering (Control Engineering)",
+          "grade": "EQF Level 6",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "30/11/2014 - 30/11/2020",
+          "website": {
+            "url": "https://aait.edu.et",
+            "label": "Website",
+            "inlineLink": true
+          },
+          "description": "<p><strong>Thesis:</strong> Microcontroller-Based Induction Stove.</p>"
+        },
+        {
+          "id": "01a00ac0-3804-7749-8957-2d49c3afe5f8",
+          "hidden": true,
+          "school": "Lideta Catholic Cathedral School",
+          "degree": "Diploma",
+          "area": "High-School",
+          "grade": "3 - 10",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "",
+          "website": {
+            "url": "https://lidetacatholiccathedralschool.com/",
+            "label": "",
+            "inlineLink": true
+          },
+          "description": ""
+        }
+      ]
+    },
+    "projects": {
+      "title": "Projects",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "proj-1",
+          "hidden": false,
+          "name": "Obsidian Mesh Sync Platform",
+          "period": "02/08/2026 - Present",
+          "website": {
+            "url": "https://github.com/gmanprime/obsidian-mesh-sync",
+            "label": "GitHub Repository",
+            "inlineLink": false
+          },
+          "description": "<p>Engineered a custom extension for the Obsidian knowledge base functioning as a robust mesh synchronization platform to seamlessly sync vault content and settings. Leveraged local connections, Tailscale VPN bridges, versioned diff states, and automated backups.</p>"
+        },
+        {
+          "id": "proj-2",
+          "hidden": false,
+          "name": "Home Server Ingress & Telemetry Network",
+          "period": "05/07/2026 - 06/07/2026",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "<p>Configured and deployed a robust home lab environment using Ubuntu Server and pure Docker containers. Managed secure network ingress using Tailscale VPN pipelines, Cloudflare Tunnels, and custom YAML reverse proxy paths.</p>"
+        },
+        {
+          "id": "proj-3",
+          "hidden": false,
+          "name": "U-Net GAN Application for Spatial Super-Resolution",
+          "period": "01/09/2024 - 17/06/2026",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "<p>Developed and optimized a custom deep learning generative adversarial network (U-Net GAN) from scratch using PyTorch. Applied statistical and dynamical interpolation methods to achieve high-fidelity spatial super-resolution of temperature datasets. Engineered custom training loops accelerated via local NVIDIA GPU compute.</p>"
+        },
+        {
+          "id": "proj-4",
+          "hidden": false,
+          "name": "Microcontroller-Based Induction Stove",
+          "period": "31/12/2020 - 28/02/2021",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "<p>Designed and implemented an adjustable-frequency and -power induction stove utilizing embedded microcontroller logic. Integrated power electronics and control feedback loops for an efficient thermodynamic heating solution.</p>"
+        }
+      ]
+    },
+    "skills": {
+      "title": "Skills",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "skill-prog",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Programming Languages",
+          "proficiency": "",
+          "level": 4,
+          "keywords": [
+            "Python",
+            "Rust",
+            "C++",
+            "Objective-C",
+            "Java",
+            "HTML",
+            "CSS / SCSS",
+            "JavaScript",
+            "C# / .NET",
+            "MATLAB",
+            "R",
+            "Bash"
+          ]
+        },
+        {
+          "id": "skill-web",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Web & Full-Stack Development",
+          "proficiency": "Frontend & Backend Frameworks",
+          "level": 4,
+          "keywords": [
+            "Next.js",
+            "React.js",
+            "Express.js",
+            "NestJS",
+            "JSON",
+            "Mongoose",
+            "MongoDB",
+            "PostgreSQL",
+            "NodeJS",
+            "ElectronJS",
+            "MySQL"
+          ]
+        },
+        {
+          "id": "skill-mlds",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Machine Learning & Data Science",
+          "proficiency": "AI, Geospatial & Analytics",
+          "level": 4,
+          "keywords": [
+            "TensorFlow",
+            "PyTorch",
+            "Pandas",
+            "Matplotlib",
+            "GeoPandas",
+            "NumPy",
+            "Scikit-Learn",
+            "Apache Spark",
+            "MPI / Open MPI",
+            "Seaborn"
+          ]
+        },
+        {
+          "id": "skill-sys",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Systems & Infrastructure",
+          "proficiency": "DevOps, OS & Tooling",
+          "level": 4,
+          "keywords": [
+            "Linux (Debian / Arch)",
+            "Docker",
+            "Git",
+            "VS Code",
+            "QGIS",
+            "SQLite",
+            "Android Studio"
+          ]
+        },
+        {
+          "id": "skill-eng",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Engineering & Electronics",
+          "proficiency": "Hardware & Circuit Design",
+          "level": 0,
+          "keywords": [
+            "SPICE / LTspice",
+            "Proteus",
+            "AutoCAD",
+            "Eagle",
+            "Simulink",
+            "Arduino IDE"
+          ]
+        },
+        {
+          "id": "01a00ae5-405a-778f-8a00-b4c56e3d747c",
+          "hidden": false,
+          "icon": "acorn",
+          "iconColor": "",
+          "name": "UI / UX & Digital Design",
+          "proficiency": "Artistic Toolsets & UI / UX Design Composition",
+          "level": 0,
+          "keywords": [
+            "Blender 3D",
+            "Clip Studio Paint",
+            "Adobe Photoshop",
+            "Adobe Illustrator",
+            "Adobe Fresco",
+            "Figma"
+          ]
+        }
+      ]
+    },
+    "languages": {
+      "title": "Languages",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "lang-1",
+          "hidden": false,
+          "language": "Amharic",
+          "fluency": "Mother Tongue / Native",
+          "level": 5
+        },
+        {
+          "id": "lang-2",
+          "hidden": false,
+          "language": "English",
+          "fluency": "Proficient User (C2)",
+          "level": 5
+        },
+        {
+          "id": "lang-3",
+          "hidden": false,
+          "language": "German",
+          "fluency": "Independent User (C1 Listening/Reading, B2 Speaking/Writing)",
+          "level": 3
+        }
+      ]
+    },
+    "interests": {
+      "title": "Hobbies & Interests",
+      "icon": "",
+      "columns": 1,
+      "hidden": true,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "int-1",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Basketball",
+          "keywords": [
+            "High School Level",
+            "Sub-national kebele teams",
+            "Sports clubs"
+          ]
+        },
+        {
+          "id": "int-2",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Music",
+          "keywords": [
+            "Recorder",
+            "Piano",
+            "Guitar",
+            "Drums"
+          ]
+        },
+        {
+          "id": "int-3",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Reading",
+          "keywords": [
+            "Science",
+            "Politics",
+            "Fiction"
+          ]
+        },
+        {
+          "id": "int-4",
+          "hidden": false,
+          "icon": "",
+          "iconColor": "",
+          "name": "Recreational Programming",
+          "keywords": [
+            "Open Source",
+            "Problem Solving",
+            "Tech News"
+          ]
+        }
+      ]
+    },
+    "awards": {
+      "title": "Honours & Awards",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "award-1",
+          "hidden": false,
+          "title": "Critical Support Award",
+          "awarder": "Lideta Catholic Cathedral School",
+          "date": "2015",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "Awarded for providing technical support during a national competition across 12 active student clubs, netting two 1st place, three 2nd place, and one 3rd place award for the institution."
+        }
+      ]
+    },
+    "certifications": {
+      "title": "Certifications & Training",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "cert-1",
+          "hidden": false,
+          "title": "Android Java Development & Cultural Exchange Program",
+          "issuer": "Korea Advanced Institute of Science and Technology (KAIST)",
+          "date": "30/07/2019",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "Completed an intensive Android Java Development course instructed by senior students from KAIST. Selected as a university representative for a cross-cultural exchange initiative."
+        },
+        {
+          "id": "cert-2",
+          "hidden": false,
+          "title": "African Youth in the Digital World Assembly Certification",
+          "issuer": "SIGNIS-Africa",
+          "date": "07/09/2019",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "Participation certification for congress and delegates assembly on African Youth in the digital world."
+        },
+        {
+          "id": "cert-3",
+          "hidden": false,
+          "title": "AIESEC Train the Trainer Completion Certification",
+          "issuer": "AIESEC / Africa Code Week",
+          "date": "15/09/2016",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "Certified trainer for programming education as part of the Africa Code Week outreach initiative."
+        }
+      ]
+    },
+    "publications": {
+      "title": "",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": []
+    },
+    "volunteer": {
+      "title": "Management & Leadership",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": [
+        {
+          "id": "vol-1",
+          "hidden": false,
+          "organization": "Lideta Catholic Cathedral School",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "2014 - 2015",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "Selected as one of 4 students to lead the IT club and handle technical/infrastructure management across school operations in the absence of a designated instructor."
+        },
+        {
+          "id": "vol-2",
+          "hidden": false,
+          "organization": "AIESEC",
+          "location": "Addis Ababa, Ethiopia",
+          "period": "2016",
+          "website": {
+            "url": "",
+            "label": "",
+            "inlineLink": false
+          },
+          "description": "Trained as an instructor and taught foundational programming concepts to secondary students during Africa Code Week."
+        }
+      ]
+    },
+    "references": {
+      "title": "",
+      "icon": "",
+      "columns": 1,
+      "hidden": false,
+      "keepTogether": false,
+      "startOnNewPage": false,
+      "items": []
+    }
+  },
+  "customSections": [],
+  "metadata": {
+    "template": "onyx",
+    "layout": {
+      "sidebarWidth": 33,
+      "pages": [
+        {
+          "fullWidth": false,
+          "main": [
+            "summary",
+            "experience",
+            "education",
+            "projects",
+            "volunteer",
+            "skills",
+            "languages",
+            "certifications",
+            "awards",
+            "profiles",
+            "interests"
+          ],
+          "sidebar": []
+        }
+      ]
+    },
+    "page": {
+      "gapX": 4,
+      "gapY": 6,
+      "marginX": 18,
+      "marginY": 18,
+      "format": "a4",
+      "locale": "en-US",
+      "hideLinkUnderline": false,
+      "hideIcons": false,
+      "hideSectionIcons": true
+    },
+    "design": {
+      "level": {
+        "icon": "star",
+        "type": "circle"
+      },
+      "colors": {
+        "primary": "rgba(37, 99, 235, 1)",
+        "text": "rgba(0, 0, 0, 1)",
+        "background": "rgba(255, 255, 255, 1)"
+      }
+    },
+    "typography": {
+      "body": {
+        "fontFamily": "Helvetica",
+        "fontWeights": [
+          "400",
+          "700"
+        ],
+        "fontSize": 11,
+        "lineHeight": 1.5
+      },
+      "heading": {
+        "fontFamily": "Helvetica",
+        "fontWeights": [
+          "400",
+          "700"
+        ],
+        "fontSize": 15,
+        "lineHeight": 1.5
+      }
+    },
+    "notes": "",
+    "styleRules": []
+  }
+}
