@@ -221,38 +221,163 @@ export class AnalyticsService {
   }
 
   /**
-   * Aggregates high-level telemetry stats across all user profiles for the Admin Dashboard.
+   * Aggregates comprehensive telemetry statistics for the Admin Analytics Dashboard.
+   * Supports filtering by profileId, date range, and search keyword.
    */
-  static async getOverallAnalytics(userId?: string) {
-    let profileIds: string[] = [];
-    if (userId) {
-      const userProfiles = await db
-        .select({ id: profiles.id, name: profiles.name, hash: profiles.hash })
-        .from(profiles)
-        .where(eq(profiles.userId, userId));
-      profileIds = userProfiles.map((p) => p.id);
-      if (profileIds.length === 0) {
-        return {
-          totalVisits: 0,
-          uniqueVisitors: 0,
-          recentVisits: [],
-        };
-      }
+  static async getDashboardAnalytics(params: {
+    userId: string;
+    profileId?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const { userId, profileId, startDate, endDate, search, limit = 100, offset = 0 } = params;
+
+    // Fetch user's profiles for security and dropdown options
+    const userProfiles = await db
+      .select({ id: profiles.id, name: profiles.name, hash: profiles.hash, isDefault: profiles.isDefault })
+      .from(profiles)
+      .where(eq(profiles.userId, userId))
+      .orderBy(asc(profiles.name));
+
+    const userProfileIds = userProfiles.map((p) => p.id);
+
+    if (userProfileIds.length === 0) {
+      return {
+        totalVisits: 0,
+        uniqueVisitors: 0,
+        devices: [],
+        browsers: [],
+        operatingSystems: [],
+        countries: [],
+        referrers: [],
+        timeline: [],
+        recentVisits: [],
+        profiles: [],
+      };
     }
 
-    const whereClause = profileIds.length > 0 ? inArray(profileAnalytics.profileId, profileIds) : undefined;
+    // Determine target profile IDs
+    const targetProfileIds = profileId && userProfileIds.includes(profileId)
+      ? [profileId]
+      : userProfileIds;
 
+    const conditions = [inArray(profileAnalytics.profileId, targetProfileIds)];
+
+    if (startDate) {
+      conditions.push(gte(profileAnalytics.visitedAt, new Date(startDate)));
+    }
+    if (endDate) {
+      conditions.push(lte(profileAnalytics.visitedAt, new Date(endDate)));
+    }
+    if (search && search.trim()) {
+      const q = `%${search.trim().toLowerCase()}%`;
+      conditions.push(
+        sql`(
+          lower(${profileAnalytics.ipAddress}) LIKE ${q} OR
+          lower(${profileAnalytics.country}) LIKE ${q} OR
+          lower(${profileAnalytics.city}) LIKE ${q} OR
+          lower(${profileAnalytics.region}) LIKE ${q} OR
+          lower(${profileAnalytics.browser}) LIKE ${q} OR
+          lower(${profileAnalytics.os}) LIKE ${q} OR
+          lower(${profileAnalytics.referrer}) LIKE ${q} OR
+          lower(${profileAnalytics.userAgent}) LIKE ${q}
+        )`
+      );
+    }
+
+    const whereClause = and(...conditions);
+
+    // Total visits count
     const [totalResult] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(profileAnalytics)
       .where(whereClause);
 
+    const totalVisits = totalResult?.count || 0;
+
+    // Unique visitors count (by distinct IP)
     const [uniqueResult] = await db
       .select({ count: sql<number>`count(distinct ${profileAnalytics.ipAddress})::int` })
       .from(profileAnalytics)
       .where(whereClause);
 
-    const recentRows = await db
+    const uniqueVisitors = uniqueResult?.count || 0;
+
+    // Device breakdown
+    const devices = await db
+      .select({
+        deviceType: sql<string>`coalesce(${profileAnalytics.deviceType}, 'desktop')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(profileAnalytics)
+      .where(whereClause)
+      .groupBy(profileAnalytics.deviceType)
+      .orderBy(desc(sql`count(*)`));
+
+    // Browsers breakdown
+    const browsers = await db
+      .select({
+        browser: sql<string>`coalesce(${profileAnalytics.browser}, 'Other')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(profileAnalytics)
+      .where(whereClause)
+      .groupBy(profileAnalytics.browser)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    // Operating Systems breakdown
+    const operatingSystems = await db
+      .select({
+        os: sql<string>`coalesce(${profileAnalytics.os}, 'Other')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(profileAnalytics)
+      .where(whereClause)
+      .groupBy(profileAnalytics.os)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    // Geographic Countries breakdown
+    const countries = await db
+      .select({
+        country: sql<string>`coalesce(${profileAnalytics.country}, 'Unknown')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(profileAnalytics)
+      .where(whereClause)
+      .groupBy(profileAnalytics.country)
+      .orderBy(desc(sql`count(*)`))
+      .limit(15);
+
+    // Top Referrers
+    const referrers = await db
+      .select({
+        referrer: sql<string>`coalesce(${profileAnalytics.referrer}, 'Direct / Bookmark')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(profileAnalytics)
+      .where(whereClause)
+      .groupBy(profileAnalytics.referrer)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    // Timeline trend (by date)
+    const timeline = await db
+      .select({
+        date: sql<string>`to_char(${profileAnalytics.visitedAt}, 'YYYY-MM-DD')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(profileAnalytics)
+      .where(whereClause)
+      .groupBy(sql`to_char(${profileAnalytics.visitedAt}, 'YYYY-MM-DD')`)
+      .orderBy(asc(sql`to_char(${profileAnalytics.visitedAt}, 'YYYY-MM-DD')`));
+
+    // Access logs list (paginated)
+    const recentVisits = await db
       .select({
         id: profileAnalytics.id,
         profileId: profileAnalytics.profileId,
@@ -275,40 +400,116 @@ export class AnalyticsService {
       .leftJoin(profiles, eq(profileAnalytics.profileId, profiles.id))
       .where(whereClause)
       .orderBy(desc(profileAnalytics.visitedAt))
-      .limit(10);
+      .limit(limit)
+      .offset(offset);
 
     return {
-      totalVisits: totalResult?.count || 0,
-      uniqueVisitors: uniqueResult?.count || 0,
-      recentVisits: recentRows,
+      totalVisits,
+      uniqueVisitors,
+      devices,
+      browsers,
+      operatingSystems,
+      countries,
+      referrers,
+      timeline,
+      recentVisits,
+      profiles: userProfiles,
+    };
+  }
+
+  /**
+   * Aggregates high-level telemetry stats across all user profiles for the Admin Dashboard.
+   */
+  static async getOverallAnalytics(userId?: string) {
+    if (!userId) {
+      return { totalVisits: 0, uniqueVisitors: 0, recentVisits: [] };
+    }
+    const dashboard = await this.getDashboardAnalytics({ userId, limit: 10 });
+    return {
+      totalVisits: dashboard.totalVisits,
+      uniqueVisitors: dashboard.uniqueVisitors,
+      recentVisits: dashboard.recentVisits,
     };
   }
 
   /**
    * Generates standard RFC 4180 CSV export of analytics logs.
    */
-  static async exportAnalyticsCSV(profileId: string, userId?: string): Promise<string> {
-    if (userId) {
-      const [userProfile] = await db
-        .select()
-        .from(profiles)
-        .where(and(eq(profiles.id, profileId), eq(profiles.userId, userId)))
-        .limit(1);
+  static async exportAnalyticsCSV(params: {
+    userId: string;
+    profileId?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  }): Promise<string> {
+    const { userId, profileId, startDate, endDate, search } = params;
 
-      if (!userProfile) {
-        throw new Error('Profile not found or access denied');
-      }
+    const userProfiles = await db
+      .select({ id: profiles.id })
+      .from(profiles)
+      .where(eq(profiles.userId, userId));
+
+    const userProfileIds = userProfiles.map((p) => p.id);
+    if (userProfileIds.length === 0) {
+      return 'ID,Visited At,Profile Name,Profile Hash,IP Address,Country,City,Region,Device Type,Browser,OS,Referrer,Screen Width,Screen Height,User Agent\r\n';
+    }
+
+    const targetProfileIds = profileId && userProfileIds.includes(profileId)
+      ? [profileId]
+      : userProfileIds;
+
+    const conditions = [inArray(profileAnalytics.profileId, targetProfileIds)];
+
+    if (startDate) {
+      conditions.push(gte(profileAnalytics.visitedAt, new Date(startDate)));
+    }
+    if (endDate) {
+      conditions.push(lte(profileAnalytics.visitedAt, new Date(endDate)));
+    }
+    if (search && search.trim()) {
+      const q = `%${search.trim().toLowerCase()}%`;
+      conditions.push(
+        sql`(
+          lower(${profileAnalytics.ipAddress}) LIKE ${q} OR
+          lower(${profileAnalytics.country}) LIKE ${q} OR
+          lower(${profileAnalytics.city}) LIKE ${q} OR
+          lower(${profileAnalytics.region}) LIKE ${q} OR
+          lower(${profileAnalytics.browser}) LIKE ${q} OR
+          lower(${profileAnalytics.os}) LIKE ${q} OR
+          lower(${profileAnalytics.referrer}) LIKE ${q} OR
+          lower(${profileAnalytics.userAgent}) LIKE ${q}
+        )`
+      );
     }
 
     const rows = await db
-      .select()
+      .select({
+        id: profileAnalytics.id,
+        visitedAt: profileAnalytics.visitedAt,
+        ipAddress: profileAnalytics.ipAddress,
+        country: profileAnalytics.country,
+        city: profileAnalytics.city,
+        region: profileAnalytics.region,
+        deviceType: profileAnalytics.deviceType,
+        browser: profileAnalytics.browser,
+        os: profileAnalytics.os,
+        referrer: profileAnalytics.referrer,
+        screenWidth: profileAnalytics.screenWidth,
+        screenHeight: profileAnalytics.screenHeight,
+        userAgent: profileAnalytics.userAgent,
+        profileName: profiles.name,
+        profileHash: profiles.hash,
+      })
       .from(profileAnalytics)
-      .where(eq(profileAnalytics.profileId, profileId))
+      .leftJoin(profiles, eq(profileAnalytics.profileId, profiles.id))
+      .where(and(...conditions))
       .orderBy(desc(profileAnalytics.visitedAt));
 
     const headers = [
       'ID',
       'Visited At',
+      'Profile Name',
+      'Profile Hash',
       'IP Address',
       'Country',
       'City',
@@ -325,7 +526,7 @@ export class AnalyticsService {
     const escapeCSV = (val: unknown) => {
       if (val === null || val === undefined) return '';
       const str = String(val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
         return `"${str.replace(/"/g, '""')}"`;
       }
       return str;
@@ -338,6 +539,8 @@ export class AnalyticsService {
         [
           row.id,
           row.visitedAt.toISOString(),
+          escapeCSV(row.profileName || ''),
+          escapeCSV(row.profileHash || ''),
           escapeCSV(row.ipAddress),
           escapeCSV(row.country),
           escapeCSV(row.city),

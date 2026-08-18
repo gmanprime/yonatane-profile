@@ -71,12 +71,16 @@ export class ProfileService {
     return nanoid(10);
   }
 
-  static async getProfiles(userId: string): Promise<Profile[]> {
-    return db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.userId, userId))
-      .orderBy(asc(profiles.createdAt));
+  static async getProfiles(userId: string) {
+    return db.query.profiles.findMany({
+      where: eq(profiles.userId, userId),
+      with: {
+        contentDataset: true,
+        theme: true,
+        profileSections: true,
+      },
+      orderBy: [asc(profiles.createdAt)],
+    });
   }
 
   static async getProfileById(id: string, userId?: string) {
@@ -88,7 +92,18 @@ export class ProfileService {
     const result = await db.query.profiles.findFirst({
       where: and(...conditions),
       with: {
-        contentDataset: true,
+        contentDataset: {
+          with: {
+            sections: {
+              with: {
+                items: {
+                  orderBy: [asc(sectionItems.displayOrder)],
+                },
+              },
+              orderBy: [asc(sections.displayOrder)],
+            },
+          },
+        },
         theme: true,
         profileSections: {
           orderBy: [asc(profileSections.displayOrder)],
@@ -97,6 +112,23 @@ export class ProfileService {
     });
 
     return result || null;
+  }
+
+  static async setPrimaryProfile(id: string, userId: string): Promise<Profile | null> {
+    return await db.transaction(async (tx) => {
+      await tx
+        .update(profiles)
+        .set({ isDefault: false })
+        .where(eq(profiles.userId, userId));
+
+      const [updated] = await tx
+        .update(profiles)
+        .set({ isDefault: true, updatedAt: new Date() })
+        .where(and(eq(profiles.id, id), eq(profiles.userId, userId)))
+        .returning();
+
+      return updated || null;
+    });
   }
 
   static async createProfile(userId: string, input: CreateProfileInput): Promise<Profile> {

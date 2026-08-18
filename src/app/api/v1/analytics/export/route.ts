@@ -3,30 +3,38 @@ import { AuthService } from '@/lib/services/auth.service';
 import { AnalyticsService } from '@/lib/services/analytics.service';
 import { getErrorMessage } from '@/lib/utils/error';
 
-interface RouteContext {
-  params: Promise<{ id: string }>;
-}
-
-export async function GET(req: NextRequest, context: RouteContext) {
+export async function GET(req: NextRequest) {
   try {
     const auth = await AuthService.getCurrentUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await context.params;
-    const csvData = await AnalyticsService.exportAnalyticsCSV({
+    const { searchParams } = new URL(req.url);
+    const profileId = searchParams.get('profileId') || undefined;
+    const startDate = searchParams.get('startDate') || undefined;
+    const endDate = searchParams.get('endDate') || undefined;
+    const search = searchParams.get('search') || undefined;
+
+    const csvContent = await AnalyticsService.exportAnalyticsCSV({
       userId: auth.dbUser.id,
-      profileId: id,
+      profileId,
+      startDate,
+      endDate,
+      search,
     });
 
-    const filename = `analytics-profile-${id}-${new Date().toISOString().split('T')[0]}.csv`;
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = profileId
+      ? `stealth-telemetry-profile-${timestamp}.csv`
+      : `stealth-telemetry-all-${timestamp}.csv`;
 
-    return new NextResponse(csvData, {
+    return new NextResponse(csvContent, {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     });
   } catch (error: unknown) {
