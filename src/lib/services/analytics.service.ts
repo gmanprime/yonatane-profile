@@ -4,7 +4,7 @@ import {
   type AnalyticsQueryInput,
   type TelemetryRecordInput,
 } from '@/lib/validators/analytics.validator';
-import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 
 export interface AnalyticsSummary {
   totalVisits: number;
@@ -217,6 +217,70 @@ export class AnalyticsService {
       referrers,
       timeline,
       recentVisits,
+    };
+  }
+
+  /**
+   * Aggregates high-level telemetry stats across all user profiles for the Admin Dashboard.
+   */
+  static async getOverallAnalytics(userId?: string) {
+    let profileIds: string[] = [];
+    if (userId) {
+      const userProfiles = await db
+        .select({ id: profiles.id, name: profiles.name, hash: profiles.hash })
+        .from(profiles)
+        .where(eq(profiles.userId, userId));
+      profileIds = userProfiles.map((p) => p.id);
+      if (profileIds.length === 0) {
+        return {
+          totalVisits: 0,
+          uniqueVisitors: 0,
+          recentVisits: [],
+        };
+      }
+    }
+
+    const whereClause = profileIds.length > 0 ? inArray(profileAnalytics.profileId, profileIds) : undefined;
+
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(profileAnalytics)
+      .where(whereClause);
+
+    const [uniqueResult] = await db
+      .select({ count: sql<number>`count(distinct ${profileAnalytics.ipAddress})::int` })
+      .from(profileAnalytics)
+      .where(whereClause);
+
+    const recentRows = await db
+      .select({
+        id: profileAnalytics.id,
+        profileId: profileAnalytics.profileId,
+        ipAddress: profileAnalytics.ipAddress,
+        country: profileAnalytics.country,
+        city: profileAnalytics.city,
+        region: profileAnalytics.region,
+        deviceType: profileAnalytics.deviceType,
+        browser: profileAnalytics.browser,
+        os: profileAnalytics.os,
+        referrer: profileAnalytics.referrer,
+        screenWidth: profileAnalytics.screenWidth,
+        screenHeight: profileAnalytics.screenHeight,
+        userAgent: profileAnalytics.userAgent,
+        visitedAt: profileAnalytics.visitedAt,
+        profileName: profiles.name,
+        profileHash: profiles.hash,
+      })
+      .from(profileAnalytics)
+      .leftJoin(profiles, eq(profileAnalytics.profileId, profiles.id))
+      .where(whereClause)
+      .orderBy(desc(profileAnalytics.visitedAt))
+      .limit(10);
+
+    return {
+      totalVisits: totalResult?.count || 0,
+      uniqueVisitors: uniqueResult?.count || 0,
+      recentVisits: recentRows,
     };
   }
 
