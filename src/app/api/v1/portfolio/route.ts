@@ -14,11 +14,15 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const statusParam = url.searchParams.get('status');
     const status = statusParam === 'published' || statusParam === 'draft' ? statusParam : undefined;
+    const tag = url.searchParams.get('tag') || undefined;
+    const search = url.searchParams.get('search') || undefined;
     const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!, 10) : undefined;
     const offset = url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!, 10) : undefined;
 
     const items = await PortfolioService.getPortfolioItems(auth.dbUser.id, {
       status,
+      tag,
+      search,
       limit,
       offset,
     });

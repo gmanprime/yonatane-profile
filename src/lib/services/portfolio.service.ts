@@ -1,32 +1,77 @@
 import { db } from '@/lib/db';
-import { portfolioItems, type PortfolioItem } from '@/lib/db/schema';
+import { portfolioItems, contentDatasets, sections, type PortfolioItem, type SectionItem } from '@/lib/db/schema';
 import {
   type CreatePortfolioItemInput,
   type UpdatePortfolioItemInput,
 } from '@/lib/validators/portfolio.validator';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, ilike, or } from 'drizzle-orm';
 
 export interface PortfolioQueryOptions {
   status?: 'draft' | 'published';
+  tag?: string;
+  search?: string;
   limit?: number;
   offset?: number;
 }
 
+export interface PortfolioItemWithProject extends PortfolioItem {
+  projectItem?: SectionItem | null;
+}
+
+export interface AvailableProjectItem {
+  id: string;
+  datasetId: string;
+  datasetName: string;
+  sectionId: string;
+  sectionTitle: string;
+  name: string;
+  period?: string;
+  website?: string;
+  description?: string;
+  data: Record<string, unknown>;
+}
+
 export class PortfolioService {
-  static async getPortfolioItems(userId: string, options: PortfolioQueryOptions = {}): Promise<PortfolioItem[]> {
+  static async getPortfolioItems(
+    userId: string,
+    options: PortfolioQueryOptions = {}
+  ): Promise<PortfolioItemWithProject[]> {
     const conditions = [eq(portfolioItems.userId, userId)];
 
     if (options.status) {
       conditions.push(eq(portfolioItems.status, options.status));
     }
 
-    return db
-      .select()
-      .from(portfolioItems)
-      .where(and(...conditions))
-      .orderBy(desc(portfolioItems.createdAt))
-      .limit(options.limit ?? 50)
-      .offset(options.offset ?? 0);
+    if (options.search && options.search.trim() !== '') {
+      const searchPattern = `%${options.search.trim()}%`;
+      conditions.push(
+        or(
+          ilike(portfolioItems.title, searchPattern),
+          ilike(portfolioItems.subtitle, searchPattern),
+          ilike(portfolioItems.markdownBody, searchPattern)
+        )!
+      );
+    }
+
+    const items = await db.query.portfolioItems.findMany({
+      where: and(...conditions),
+      orderBy: [desc(portfolioItems.createdAt)],
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+      with: {
+        projectItem: true,
+      },
+    });
+
+    if (options.tag && options.tag.trim() !== '') {
+      const targetTag = options.tag.trim().toLowerCase();
+      return items.filter((item) => {
+        const tags = (item.tags as string[]) || [];
+        return tags.some((t) => t.toLowerCase() === targetTag);
+      });
+    }
+
+    return items;
   }
 
   static async getPortfolioItemById(id: string, userId?: string) {
@@ -110,6 +155,31 @@ export class PortfolioService {
     return updated || null;
   }
 
+  static async duplicatePortfolioItem(id: string, userId: string): Promise<PortfolioItem | null> {
+    const original = await this.getPortfolioItemById(id, userId);
+    if (!original) {
+      return null;
+    }
+
+    const [cloned] = await db
+      .insert(portfolioItems)
+      .values({
+        userId,
+        title: `${original.title} (Copy)`,
+        subtitle: original.subtitle,
+        projectItemId: original.projectItemId,
+        coverImageUrl: original.coverImageUrl,
+        markdownBody: original.markdownBody,
+        tags: original.tags || [],
+        links: original.links || [],
+        status: 'draft',
+        publishedAt: null,
+      })
+      .returning();
+
+    return cloned || null;
+  }
+
   static async deletePortfolioItem(id: string, userId: string): Promise<boolean> {
     const [deleted] = await db
       .delete(portfolioItems)
@@ -117,5 +187,43 @@ export class PortfolioService {
       .returning({ id: portfolioItems.id });
 
     return !!deleted;
+  }
+
+  static async getProjectItems(userId: string): Promise<AvailableProjectItem[]> {
+    const datasets = await db.query.contentDatasets.findMany({
+      where: eq(contentDatasets.userId, userId),
+      with: {
+        sections: {
+          where: eq(sections.type, 'projects'),
+          with: {
+            items: true,
+          },
+        },
+      },
+    });
+
+    const projectItems: AvailableProjectItem[] = [];
+
+    for (const ds of datasets) {
+      for (const sec of ds.sections) {
+        for (const it of sec.items) {
+          const itemData = (it.data as Record<string, unknown>) || {};
+          projectItems.push({
+            id: it.id,
+            datasetId: ds.id,
+            datasetName: ds.name,
+            sectionId: sec.id,
+            sectionTitle: sec.title,
+            name: (itemData.name as string) || (itemData.title as string) || 'Untitled Project',
+            period: (itemData.period as string) || (itemData.date as string) || undefined,
+            website: (itemData.website as string) || (itemData.url as string) || undefined,
+            description: (itemData.description as string) || (itemData.summary as string) || undefined,
+            data: itemData,
+          });
+        }
+      }
+    }
+
+    return projectItems;
   }
 }

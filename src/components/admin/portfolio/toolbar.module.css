@@ -1,0 +1,169 @@
+/* ==========================================================================
+   Markdown Toolbar & Telemetry Bar Styles
+   ========================================================================== */
+
+.toolbarRoot {
+  background: #0d1322;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  user-select: none;
+}
+
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.formatGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.toolBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #cbd5e1;
+  padding: 0.3rem 0.55rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 28px;
+  transition: all 0.15s ease;
+}
+
+.toolBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 0.25rem;
+}
+
+.markIcon {
+  background: #fef08a;
+  color: #000000;
+  padding: 0 0.2rem;
+  border-radius: 2px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.calloutBtn {
+  font-size: 0.75rem;
+}
+
+.noteDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+}
+
+.tipDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+}
+
+.warnDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fbbf24;
+}
+
+/* View Mode Buttons */
+.viewModeGroup {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.15rem;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.viewBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.25rem 0.65rem;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+}
+
+.viewBtn:hover {
+  color: #f1f5f9;
+}
+
+.viewBtnActive {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+}
+
+/* Stats Row */
+.statsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.statsList {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.statItem {
+  color: #94a3b8;
+}
+
+.statItem strong {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.statDot {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.shortcutHint {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 768px) {
+  .shortcutHint {
+    display: none;
+  }
+}
