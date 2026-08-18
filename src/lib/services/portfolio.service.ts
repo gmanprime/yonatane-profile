@@ -4,7 +4,7 @@ import {
   type CreatePortfolioItemInput,
   type UpdatePortfolioItemInput,
 } from '@/lib/validators/portfolio.validator';
-import { and, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, or } from 'drizzle-orm';
 
 export interface PortfolioQueryOptions {
   status?: 'draft' | 'published';
@@ -99,6 +99,77 @@ export class PortfolioService {
     });
 
     return result || null;
+  }
+
+  static async getPublicPortfolioItems(
+    options: { tag?: string; search?: string; limit?: number; offset?: number } = {}
+  ): Promise<PortfolioItemWithProject[]> {
+    const conditions = [eq(portfolioItems.status, 'published')];
+
+    if (options.search && options.search.trim() !== '') {
+      const searchPattern = `%${options.search.trim()}%`;
+      conditions.push(
+        or(
+          ilike(portfolioItems.title, searchPattern),
+          ilike(portfolioItems.subtitle, searchPattern),
+          ilike(portfolioItems.markdownBody, searchPattern)
+        )!
+      );
+    }
+
+    const items = await db.query.portfolioItems.findMany({
+      where: and(...conditions),
+      orderBy: [desc(portfolioItems.publishedAt), desc(portfolioItems.createdAt)],
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+      with: {
+        projectItem: true,
+      },
+    });
+
+    if (options.tag && options.tag.trim() !== '') {
+      const targetTag = options.tag.trim().toLowerCase();
+      return items.filter((item) => {
+        const tags = (item.tags as string[]) || [];
+        return tags.some((t) => t.toLowerCase() === targetTag);
+      });
+    }
+
+    return items;
+  }
+
+  static async getPublishedPortfolioByProjectItemIds(
+    projectItemIds: string[]
+  ): Promise<Record<string, { id: string; title: string; subtitle: string | null; coverImageUrl: string | null }>> {
+    if (projectItemIds.length === 0) return {};
+
+    const items = await db.query.portfolioItems.findMany({
+      where: and(
+        eq(portfolioItems.status, 'published'),
+        inArray(portfolioItems.projectItemId, projectItemIds)
+      ),
+      columns: {
+        id: true,
+        title: true,
+        subtitle: true,
+        coverImageUrl: true,
+        projectItemId: true,
+      },
+    });
+
+    const map: Record<string, { id: string; title: string; subtitle: string | null; coverImageUrl: string | null }> = {};
+    for (const item of items) {
+      if (item.projectItemId) {
+        map[item.projectItemId] = {
+          id: item.id,
+          title: item.title,
+          subtitle: item.subtitle,
+          coverImageUrl: item.coverImageUrl,
+        };
+      }
+    }
+
+    return map;
   }
 
   static async createPortfolioItem(userId: string, input: CreatePortfolioItemInput): Promise<PortfolioItem> {

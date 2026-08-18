@@ -5,11 +5,26 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ============================================================
-  // 1. STEALTH ROUTING: /p/[hash]
+  // 1. STEALTH ROUTING: /p/[hash] & /p/[hash]/blog/*
   // ============================================================
   if (pathname.startsWith('/p/')) {
     const segments = pathname.split('/').filter(Boolean);
-    const hash = segments[1]; // ['p', 'hash']
+    const hash = segments[1]; // ['p', 'hash', ...]
+
+    // If accessing portfolio/blog route under hash: /p/[hash]/blog or /p/[hash]/blog/[id]
+    if (segments.length >= 3 && segments[2] === 'blog') {
+      const response = NextResponse.next();
+      if (hash && hash !== 'default') {
+        response.cookies.set('__profile', hash, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 31536000,
+          path: '/',
+        });
+      }
+      return response;
+    }
 
     const targetUrl = new URL('/', request.url);
     const response = NextResponse.redirect(targetUrl, 302);
