@@ -91,51 +91,61 @@ export class PortfolioService {
   }
 
   static async getPublicPortfolioItem(id: string) {
-    const result = await db.query.portfolioItems.findFirst({
-      where: and(eq(portfolioItems.id, id), eq(portfolioItems.status, 'published')),
-      with: {
-        projectItem: true,
-      },
-    });
+    try {
+      const result = await db.query.portfolioItems.findFirst({
+        where: and(eq(portfolioItems.id, id), eq(portfolioItems.status, 'published')),
+        with: {
+          projectItem: true,
+        },
+      });
 
-    return result || null;
+      return result || null;
+    } catch (error) {
+      console.warn('Database offline or unreachable while fetching public portfolio item:', error);
+      return null;
+    }
   }
 
   static async getPublicPortfolioItems(
     options: { tag?: string; search?: string; limit?: number; offset?: number } = {}
   ): Promise<PortfolioItemWithProject[]> {
-    const conditions = [eq(portfolioItems.status, 'published')];
+    try {
+      const conditions = [eq(portfolioItems.status, 'published')];
 
-    if (options.search && options.search.trim() !== '') {
-      const searchPattern = `%${options.search.trim()}%`;
-      conditions.push(
-        or(
-          ilike(portfolioItems.title, searchPattern),
-          ilike(portfolioItems.subtitle, searchPattern),
-          ilike(portfolioItems.markdownBody, searchPattern)
-        )!
-      );
-    }
+      if (options.search && options.search.trim() !== '') {
+        const searchPattern = `%${options.search.trim()}%`;
+        conditions.push(
+          or(
+            ilike(portfolioItems.title, searchPattern),
+            ilike(portfolioItems.subtitle, searchPattern),
+            ilike(portfolioItems.markdownBody, searchPattern)
+          )!
+        );
+      }
 
-    const items = await db.query.portfolioItems.findMany({
-      where: and(...conditions),
-      orderBy: [desc(portfolioItems.publishedAt), desc(portfolioItems.createdAt)],
-      limit: options.limit ?? 100,
-      offset: options.offset ?? 0,
-      with: {
-        projectItem: true,
-      },
-    });
-
-    if (options.tag && options.tag.trim() !== '') {
-      const targetTag = options.tag.trim().toLowerCase();
-      return items.filter((item) => {
-        const tags = (item.tags as string[]) || [];
-        return tags.some((t) => t.toLowerCase() === targetTag);
+      const items = await db.query.portfolioItems.findMany({
+        where: and(...conditions),
+        orderBy: [desc(portfolioItems.publishedAt), desc(portfolioItems.createdAt)],
+        limit: options.limit ?? 100,
+        offset: options.offset ?? 0,
+        with: {
+          projectItem: true,
+        },
       });
-    }
 
-    return items;
+      if (options.tag && options.tag.trim() !== '') {
+        const targetTag = options.tag.trim().toLowerCase();
+        return items.filter((item) => {
+          const tags = (item.tags as string[]) || [];
+          return tags.some((t) => t.toLowerCase() === targetTag);
+        });
+      }
+
+      return items;
+    } catch (error) {
+      console.warn('Database offline or unreachable while fetching public portfolio items:', error);
+      return [];
+    }
   }
 
   static async getPublishedPortfolioByProjectItemIds(
@@ -143,33 +153,38 @@ export class PortfolioService {
   ): Promise<Record<string, { id: string; title: string; subtitle: string | null; coverImageUrl: string | null }>> {
     if (projectItemIds.length === 0) return {};
 
-    const items = await db.query.portfolioItems.findMany({
-      where: and(
-        eq(portfolioItems.status, 'published'),
-        inArray(portfolioItems.projectItemId, projectItemIds)
-      ),
-      columns: {
-        id: true,
-        title: true,
-        subtitle: true,
-        coverImageUrl: true,
-        projectItemId: true,
-      },
-    });
+    try {
+      const items = await db.query.portfolioItems.findMany({
+        where: and(
+          eq(portfolioItems.status, 'published'),
+          inArray(portfolioItems.projectItemId, projectItemIds)
+        ),
+        columns: {
+          id: true,
+          title: true,
+          subtitle: true,
+          coverImageUrl: true,
+          projectItemId: true,
+        },
+      });
 
-    const map: Record<string, { id: string; title: string; subtitle: string | null; coverImageUrl: string | null }> = {};
-    for (const item of items) {
-      if (item.projectItemId) {
-        map[item.projectItemId] = {
-          id: item.id,
-          title: item.title,
-          subtitle: item.subtitle,
-          coverImageUrl: item.coverImageUrl,
-        };
+      const map: Record<string, { id: string; title: string; subtitle: string | null; coverImageUrl: string | null }> = {};
+      for (const item of items) {
+        if (item.projectItemId) {
+          map[item.projectItemId] = {
+            id: item.id,
+            title: item.title,
+            subtitle: item.subtitle,
+            coverImageUrl: item.coverImageUrl,
+          };
+        }
       }
-    }
 
-    return map;
+      return map;
+    } catch (error) {
+      console.warn('Database offline or unreachable while fetching portfolio links by project item IDs:', error);
+      return {};
+    }
   }
 
   static async createPortfolioItem(userId: string, input: CreatePortfolioItemInput): Promise<PortfolioItem> {

@@ -54,7 +54,7 @@ function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
 
       if (!res.ok) {
         throw new Error(data.error || 'Authentication failed');
@@ -85,7 +85,7 @@ function LoginForm() {
         body: JSON.stringify({ redirectTo: `${window.location.origin}/api/v1/auth/callback?next=${encodeURIComponent(redirectTo)}` }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
       if (!res.ok || !data.url) {
         throw new Error(data.error || 'Failed to initialize Google OAuth');
       }
@@ -94,6 +94,7 @@ function LoginForm() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Google sign-in failed.';
       setErrorMsg(message);
+    } finally {
       setLoadingType(null);
     }
   };
@@ -117,12 +118,12 @@ function LoginForm() {
         body: JSON.stringify({ email: email || undefined }),
       });
 
-      if (!optionsRes.ok) {
-        const errorData = await optionsRes.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to fetch passkey challenge');
+      const optionsData = await optionsRes.json().catch(() => ({ error: `Server returned status ${optionsRes.status}` }));
+      if (!optionsRes.ok || !optionsData.options) {
+        throw new Error(optionsData.error || 'Failed to fetch passkey challenge');
       }
 
-      const { options } = await optionsRes.json();
+      const { options } = optionsData;
 
       // Convert base64url challenge & user id to Uint8Array buffer
       const challengeBuffer = Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
@@ -159,7 +160,7 @@ function LoginForm() {
         }),
       });
 
-      const verifyData = await verifyRes.json();
+      const verifyData = await verifyRes.json().catch(() => ({ error: `Server returned status ${verifyRes.status}` }));
       if (!verifyRes.ok || !verifyData.verified) {
         throw new Error(verifyData.error || 'Passkey verification failed');
       }

@@ -21,36 +21,45 @@ export class ThemeService {
   }
 
   static async getThemeById(id: string, userId?: string): Promise<Theme | null> {
-    const conditions = [eq(themes.id, id)];
-    if (userId) {
-      conditions.push(eq(themes.userId, userId));
+    try {
+      const conditions = [eq(themes.id, id)];
+      if (userId) {
+        conditions.push(eq(themes.userId, userId));
+      }
+
+      const [theme] = await db
+        .select()
+        .from(themes)
+        .where(and(...conditions))
+        .limit(1);
+
+      return theme || null;
+    } catch (error) {
+      console.warn('Database offline or unreachable while fetching theme by id:', error);
+      return null;
     }
-
-    const [theme] = await db
-      .select()
-      .from(themes)
-      .where(and(...conditions))
-      .limit(1);
-
-    return theme || null;
   }
 
   static async getDefaultTheme(userId?: string): Promise<{ id?: string; name: string; isDefault: boolean; config: ThemeConfig }> {
-    if (userId) {
-      const [userDefault] = await db
-        .select()
-        .from(themes)
-        .where(and(eq(themes.userId, userId), eq(themes.isDefault, true)))
-        .limit(1);
+    try {
+      if (userId) {
+        const [userDefault] = await db
+          .select()
+          .from(themes)
+          .where(and(eq(themes.userId, userId), eq(themes.isDefault, true)))
+          .limit(1);
 
-      if (userDefault) {
-        return {
-          id: userDefault.id,
-          name: userDefault.name,
-          isDefault: userDefault.isDefault,
-          config: userDefault.config as ThemeConfig,
-        };
+        if (userDefault) {
+          return {
+            id: userDefault.id,
+            name: userDefault.name,
+            isDefault: userDefault.isDefault,
+            config: userDefault.config as ThemeConfig,
+          };
+        }
       }
+    } catch (error) {
+      console.warn('Database offline or unreachable while fetching default theme:', error);
     }
 
     // Return system default theme

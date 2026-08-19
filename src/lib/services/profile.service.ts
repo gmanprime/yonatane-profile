@@ -229,49 +229,155 @@ export class ProfileService {
    * Filters sections and individual items based on profile customization.
    */
   static async getResolvedProfile(hash?: string): Promise<ResolvedProfile | null> {
-    let profileRecord = null;
+    try {
+      let profileRecord = null;
 
-    if (hash && hash !== 'default') {
-      [profileRecord] = await db
-        .select()
-        .from(profiles)
-        .where(eq(profiles.hash, hash))
-        .limit(1);
-    }
-
-    // Fallback to default profile if hash is 'default' or not matched
-    if (!profileRecord) {
-      [profileRecord] = await db
-        .select()
-        .from(profiles)
-        .where(eq(profiles.isDefault, true))
-        .limit(1);
-    }
-
-    // If still no profile found, pick the earliest created profile
-    if (!profileRecord) {
-      [profileRecord] = await db
-        .select()
-        .from(profiles)
-        .orderBy(asc(profiles.createdAt))
-        .limit(1);
-    }
-
-    if (!profileRecord) {
-      return null;
-    }
-
-    // Fetch theme
-    let themeConfig: Record<string, unknown> = SYSTEM_DEFAULT_THEME_CONFIG as Record<string, unknown>;
-    if (profileRecord.themeId) {
-      const theme = await ThemeService.getThemeById(profileRecord.themeId);
-      if (theme) {
-        themeConfig = theme.config as Record<string, unknown>;
+      if (hash && hash !== 'default') {
+        [profileRecord] = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.hash, hash))
+          .limit(1);
       }
-    }
 
-    // If no dataset linked, return basic profile container
-    if (!profileRecord.contentDatasetId) {
+      // Fallback to default profile if hash is 'default' or not matched
+      if (!profileRecord) {
+        [profileRecord] = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.isDefault, true))
+          .limit(1);
+      }
+
+      // If still no profile found, pick the earliest created profile
+      if (!profileRecord) {
+        [profileRecord] = await db
+          .select()
+          .from(profiles)
+          .orderBy(asc(profiles.createdAt))
+          .limit(1);
+      }
+
+      if (!profileRecord) {
+        return null;
+      }
+
+      // Fetch theme
+      let themeConfig: Record<string, unknown> = SYSTEM_DEFAULT_THEME_CONFIG as Record<string, unknown>;
+      if (profileRecord.themeId) {
+        const theme = await ThemeService.getThemeById(profileRecord.themeId);
+        if (theme) {
+          themeConfig = theme.config as Record<string, unknown>;
+        }
+      }
+
+      // If no dataset linked, return basic profile container
+      if (!profileRecord.contentDatasetId) {
+        return {
+          profile: {
+            id: profileRecord.id,
+            name: profileRecord.name,
+            description: profileRecord.description,
+            hash: profileRecord.hash,
+            isDefault: profileRecord.isDefault,
+          },
+          basics: {},
+          summary: '',
+          picture: {},
+          theme: themeConfig,
+          sections: [],
+        };
+      }
+
+      // Fetch content dataset
+      const [dataset] = await db
+        .select()
+        .from(contentDatasets)
+        .where(eq(contentDatasets.id, profileRecord.contentDatasetId))
+        .limit(1);
+
+      if (!dataset) {
+        return null;
+      }
+
+      // Fetch all sections in this dataset
+      const allSections = await db
+        .select()
+        .from(sections)
+        .where(eq(sections.contentDatasetId, dataset.id))
+        .orderBy(asc(sections.displayOrder));
+
+      // Fetch profile_sections overrides
+      const profileSectionConfigs = await db
+        .select()
+        .from(profileSections)
+        .where(eq(profileSections.profileId, profileRecord.id));
+
+      const configMap = new Map<string, ProfileSection>();
+      profileSectionConfigs.forEach((cfg) => configMap.set(cfg.sectionId, cfg));
+
+      // Fetch all section items for all sections in one query
+      const sectionIds = allSections.map((s) => s.id);
+      const allItems =
+        sectionIds.length > 0
+          ? await db
+              .select()
+              .from(sectionItems)
+              .where(inArray(sectionItems.sectionId, sectionIds))
+              .orderBy(asc(sectionItems.displayOrder))
+          : [];
+
+      const itemsBySection = new Map<string, typeof allItems>();
+      allItems.forEach((item) => {
+        const list = itemsBySection.get(item.sectionId) || [];
+        list.push(item);
+        itemsBySection.set(item.sectionId, list);
+      });
+
+      const resolvedSections: ResolvedProfileSection[] = [];
+
+      for (const section of allSections) {
+        const cfg = configMap.get(section.id);
+
+        // Visibility check
+        const isVisible = cfg ? cfg.visible : !section.hidden;
+        if (!isVisible) continue;
+
+        const order = cfg?.displayOrder ?? section.displayOrder;
+        const rawItems = itemsBySection.get(section.id) || [];
+
+        // Filter items
+        const selectedIds = cfg?.selectedItemIds || [];
+        const hasSpecificSelection = selectedIds.length > 0;
+
+        const filteredItems: ResolvedProfileItem[] = rawItems
+          .filter((item) => {
+            if (item.hidden) return false;
+            if (hasSpecificSelection) {
+              return selectedIds.includes(item.id);
+            }
+            return true;
+          })
+          .map((item) => ({
+            id: item.id,
+            data: item.data as Record<string, unknown>,
+            displayOrder: item.displayOrder,
+          }));
+
+        resolvedSections.push({
+          id: section.id,
+          type: section.type,
+          title: section.title,
+          icon: section.icon || '',
+          columns: section.columns || 1,
+          displayOrder: order,
+          items: filteredItems,
+        });
+      }
+
+      // Sort resolved sections by their profile display order
+      resolvedSections.sort((a, b) => a.displayOrder - b.displayOrder);
+
       return {
         profile: {
           id: profileRecord.id,
@@ -280,116 +386,15 @@ export class ProfileService {
           hash: profileRecord.hash,
           isDefault: profileRecord.isDefault,
         },
-        basics: {},
-        summary: '',
-        picture: {},
+        basics: (dataset.basics as Record<string, unknown>) || {},
+        summary: dataset.summary || '',
+        picture: (dataset.picture as Record<string, unknown>) || {},
         theme: themeConfig,
-        sections: [],
+        sections: resolvedSections,
       };
-    }
-
-    // Fetch content dataset
-    const [dataset] = await db
-      .select()
-      .from(contentDatasets)
-      .where(eq(contentDatasets.id, profileRecord.contentDatasetId))
-      .limit(1);
-
-    if (!dataset) {
+    } catch (error) {
+      console.warn('Database offline or unreachable while resolving profile:', error);
       return null;
     }
-
-    // Fetch all sections in this dataset
-    const allSections = await db
-      .select()
-      .from(sections)
-      .where(eq(sections.contentDatasetId, dataset.id))
-      .orderBy(asc(sections.displayOrder));
-
-    // Fetch profile_sections overrides
-    const profileSectionConfigs = await db
-      .select()
-      .from(profileSections)
-      .where(eq(profileSections.profileId, profileRecord.id));
-
-    const configMap = new Map<string, ProfileSection>();
-    profileSectionConfigs.forEach((cfg) => configMap.set(cfg.sectionId, cfg));
-
-    // Fetch all section items for all sections in one query
-    const sectionIds = allSections.map((s) => s.id);
-    const allItems =
-      sectionIds.length > 0
-        ? await db
-            .select()
-            .from(sectionItems)
-            .where(inArray(sectionItems.sectionId, sectionIds))
-            .orderBy(asc(sectionItems.displayOrder))
-        : [];
-
-    const itemsBySection = new Map<string, typeof allItems>();
-    allItems.forEach((item) => {
-      const list = itemsBySection.get(item.sectionId) || [];
-      list.push(item);
-      itemsBySection.set(item.sectionId, list);
-    });
-
-    const resolvedSections: ResolvedProfileSection[] = [];
-
-    for (const section of allSections) {
-      const cfg = configMap.get(section.id);
-
-      // Visibility check
-      const isVisible = cfg ? cfg.visible : !section.hidden;
-      if (!isVisible) continue;
-
-      const order = cfg?.displayOrder ?? section.displayOrder;
-      const rawItems = itemsBySection.get(section.id) || [];
-
-      // Filter items
-      const selectedIds = cfg?.selectedItemIds || [];
-      const hasSpecificSelection = selectedIds.length > 0;
-
-      const filteredItems: ResolvedProfileItem[] = rawItems
-        .filter((item) => {
-          if (item.hidden) return false;
-          if (hasSpecificSelection) {
-            return selectedIds.includes(item.id);
-          }
-          return true;
-        })
-        .map((item) => ({
-          id: item.id,
-          data: item.data as Record<string, unknown>,
-          displayOrder: item.displayOrder,
-        }));
-
-      resolvedSections.push({
-        id: section.id,
-        type: section.type,
-        title: section.title,
-        icon: section.icon || '',
-        columns: section.columns || 1,
-        displayOrder: order,
-        items: filteredItems,
-      });
-    }
-
-    // Sort resolved sections by their profile display order
-    resolvedSections.sort((a, b) => a.displayOrder - b.displayOrder);
-
-    return {
-      profile: {
-        id: profileRecord.id,
-        name: profileRecord.name,
-        description: profileRecord.description,
-        hash: profileRecord.hash,
-        isDefault: profileRecord.isDefault,
-      },
-      basics: (dataset.basics as Record<string, unknown>) || {},
-      summary: dataset.summary || '',
-      picture: (dataset.picture as Record<string, unknown>) || {},
-      theme: themeConfig,
-      sections: resolvedSections,
-    };
   }
 }

@@ -85,6 +85,15 @@ export class AuthService {
    * Initiates Google OAuth sign-in flow.
    */
   static async getGoogleOAuthUrl(redirectTo?: string) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder.supabase.co')) {
+      throw new Error(
+        'Google OAuth requires configured Supabase credentials. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.'
+      );
+    }
+
     const supabase = await createClient();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const callbackUrl = redirectTo || `${siteUrl}/api/v1/auth/callback`;
