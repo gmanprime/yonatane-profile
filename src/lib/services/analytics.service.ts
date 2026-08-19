@@ -36,12 +36,12 @@ export class AnalyticsService {
       deviceType = 'mobile';
     }
 
-    // OS
-    if (lowerUA.includes('win')) os = 'Windows';
-    else if (lowerUA.includes('mac')) os = 'macOS';
+    // OS (Check iOS/iPhone/iPad before generic macOS 'like Mac OS X')
+    if (lowerUA.includes('iphone') || lowerUA.includes('ipad') || lowerUA.includes('ipod') || lowerUA.includes('ios')) os = 'iOS';
     else if (lowerUA.includes('android')) os = 'Android';
-    else if (lowerUA.includes('iphone') || lowerUA.includes('ipad') || lowerUA.includes('ios')) os = 'iOS';
-    else if (lowerUA.includes('linux')) os = 'Linux';
+    else if (lowerUA.includes('win')) os = 'Windows';
+    else if (lowerUA.includes('mac')) os = 'macOS';
+    else if (lowerUA.includes('linux') || lowerUA.includes('cros') || lowerUA.includes('x11')) os = 'Linux';
 
     // Browser
     if (lowerUA.includes('edg/')) browser = 'Edge';
