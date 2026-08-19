@@ -82,6 +82,40 @@ export class AuthService {
   }
 
   /**
+   * Registers a new administrator user with email and password.
+   * Strictly enforces admin whitelist (yonatane504@gmail.com).
+   */
+  static async signUpWithPassword(email: string, password: string, displayName?: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const ALLOWED_ADMINS = ['yonatane504@gmail.com', 'yonatan@yonatanelias.dpdns.org'];
+
+    if (!ALLOWED_ADMINS.includes(normalizedEmail)) {
+      throw new Error('Registration is restricted to authorized platform administrators only (yonatane504@gmail.com).');
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: {
+        data: {
+          full_name: displayName || 'Yonatan Elias',
+        },
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data.user) {
+      await this.syncUser(data.user);
+    }
+
+    return data;
+  }
+
+  /**
    * Initiates Google OAuth sign-in flow.
    */
   static async getGoogleOAuthUrl(redirectTo?: string) {

@@ -86,6 +86,7 @@ export async function proxy(request: NextRequest) {
     const isPublicApi =
       pathname.startsWith('/api/v1/public/') ||
       pathname === '/api/v1/auth/login' ||
+      pathname === '/api/v1/auth/register' ||
       pathname === '/api/v1/auth/google' ||
       pathname === '/api/v1/auth/callback' ||
       pathname.startsWith('/api/v1/auth/passkey/');
