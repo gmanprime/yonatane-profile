@@ -6,26 +6,80 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export class AuthService {
   /**
+   * Checks if an email is authorized to create an account.
+   * Allows platform owner and any email pre-authorized in the database `users` table.
+   */
+  static async isAuthorizedEmail(email: string): Promise<boolean> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // System owners always authorized
+    if (
+      normalizedEmail === 'yonatane504@gmail.com' ||
+      normalizedEmail === 'yonatan@yonatanelias.dpdns.org'
+    ) {
+      return true;
+    }
+
+    try {
+      // Check if email exists in database users table
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, normalizedEmail))
+        .limit(1);
+
+      return !!existingUser;
+    } catch (err) {
+      console.warn('Failed to verify user authorization in database:', err);
+      return false;
+    }
+  }
+
+  /**
    * Syncs a Supabase Auth user into the local database users table.
    */
   static async syncUser(supabaseUser: SupabaseUser): Promise<User> {
-    const existing = await db
-      .select()
-      .from(users)
-      .where(eq(users.supabaseAuthId, supabaseUser.id))
-      .limit(1);
-
-    if (existing.length > 0) {
-      return existing[0];
-    }
-
-    const email = supabaseUser.email || '';
+    const email = (supabaseUser.email || '').toLowerCase().trim();
     const displayName =
       supabaseUser.user_metadata?.full_name ||
       supabaseUser.user_metadata?.name ||
       email.split('@')[0] ||
       'Admin User';
 
+    // 1. Check if user already exists by Supabase Auth ID
+    const [existingById] = await db
+      .select()
+      .from(users)
+      .where(eq(users.supabaseAuthId, supabaseUser.id))
+      .limit(1);
+
+    if (existingById) {
+      return existingById;
+    }
+
+    // 2. Check if a pre-authorized or seeded user exists with this email
+    if (email) {
+      const [existingByEmail] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (existingByEmail) {
+        const [updated] = await db
+          .update(users)
+          .set({
+            supabaseAuthId: supabaseUser.id,
+            displayName: displayName || existingByEmail.displayName,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, existingByEmail.id))
+          .returning();
+        return updated;
+      }
+    }
+
+    // 3. Otherwise, create a new user record
     const [newUser] = await db
       .insert(users)
       .values({
@@ -66,7 +120,7 @@ export class AuthService {
   static async signInWithPassword(email: string, password: string) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.toLowerCase().trim(),
       password,
     });
 
@@ -83,14 +137,16 @@ export class AuthService {
 
   /**
    * Registers a new administrator user with email and password.
-   * Strictly enforces admin whitelist (yonatane504@gmail.com).
+   * Checks database authorized users list before registration.
    */
   static async signUpWithPassword(email: string, password: string, displayName?: string) {
     const normalizedEmail = email.toLowerCase().trim();
-    const ALLOWED_ADMINS = ['yonatane504@gmail.com', 'yonatan@yonatanelias.dpdns.org'];
+    const isAuthorized = await this.isAuthorizedEmail(normalizedEmail);
 
-    if (!ALLOWED_ADMINS.includes(normalizedEmail)) {
-      throw new Error('Registration is restricted to authorized platform administrators only (yonatane504@gmail.com).');
+    if (!isAuthorized) {
+      throw new Error(
+        `Email "${normalizedEmail}" is not in the authorized administrators list. Please contact the platform owner.`
+      );
     }
 
     const supabase = await createClient();
@@ -120,7 +176,10 @@ export class AuthService {
    */
   static async getGoogleOAuthUrl(redirectTo?: string) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseKey =
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder.supabase.co')) {
       throw new Error(

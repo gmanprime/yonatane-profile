@@ -30,14 +30,11 @@ function LoginForm() {
 
   const validateForm = () => {
     const errors: { email?: string; password?: string; displayName?: string } = {};
-    const normalizedEmail = email.toLowerCase().trim();
 
     if (!email) {
       errors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = 'Please enter a valid email address';
-    } else if (authMode === 'signup' && !ALLOWED_ADMIN_EMAILS.includes(normalizedEmail)) {
-      errors.email = 'Registration is restricted to authorized administrator (yonatane504@gmail.com)';
     }
 
     if (!password) {
@@ -220,11 +217,29 @@ function LoginForm() {
     }
   };
 
+  if (!isMounted) {
+    return (
+      <div className={styles.loginRoot}>
+        <div className={styles.ambientGlow} />
+        <div className={styles.loginCard}>
+          <div className={styles.cardHeader}>
+            <div className={styles.logoBadge}>YE</div>
+            <h1 className={styles.cardTitle}>Admin Portal</h1>
+            <p className={styles.cardSubtitle}>Secure administration & profile management</p>
+          </div>
+          <div style={{ padding: '2rem', display: 'flex', justifyContent: 'center' }}>
+            <div className={styles.spinner} style={{ width: '28px', height: '28px' }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.loginRoot} suppressHydrationWarning>
+    <div className={styles.loginRoot}>
       <div className={styles.ambientGlow} />
 
-      <div className={styles.loginCard} suppressHydrationWarning>
+      <div className={styles.loginCard}>
         <div className={styles.cardHeader}>
           <div className={styles.logoBadge}>YE</div>
           <h1 className={styles.cardTitle}>Admin Portal</h1>
@@ -268,7 +283,7 @@ function LoginForm() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            <span>Registration is restricted to <strong>yonatane504@gmail.com</strong></span>
+            <span>Admin account creation for authorized platform users</span>
           </div>
         )}
 
