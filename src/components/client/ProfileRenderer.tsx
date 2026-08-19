@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { type ResolvedProfile, type ResolvedProfileSection } from '@/lib/services/profile.service';
+import { type ResolvedProfile, type ResolvedProfileSection } from '@/lib/types/profile.types';
 import { ThemeProvider } from './ThemeProvider';
 import { ProfileHeader } from './ProfileHeader';
 import { SectionNav, type NavSection } from './SectionNav';

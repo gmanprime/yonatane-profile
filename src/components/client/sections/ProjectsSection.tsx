@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { type ResolvedProfileItem } from '@/lib/services/profile.service';
+import { type ResolvedProfileItem } from '@/lib/types/profile.types';
 import styles from '../client.module.css';
 
 interface ProjectItemData {

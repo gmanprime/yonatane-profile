@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useMemo } from 'react';
-import { SYSTEM_DEFAULT_THEME_CONFIG } from '@/lib/services/theme.service';
+import { SYSTEM_DEFAULT_THEME_CONFIG } from '@/lib/validators/theme.validator';
 
 interface ResolvedThemeConfig {
   colors: {

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './login.module.css';
 
-export default function AdminLoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/admin';
@@ -356,5 +356,29 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className={styles.loginRoot}>
+          <div className={styles.ambientGlow} />
+          <div className={styles.loginCard}>
+            <div className={styles.cardHeader}>
+              <div className={styles.logoBadge}>YE</div>
+              <h1 className={styles.cardTitle}>Admin Portal</h1>
+              <p className={styles.cardSubtitle}>Loading authentication...</p>
+            </div>
+            <div style={{ padding: '2rem', display: 'flex', justifyContent: 'center' }}>
+              <div className={styles.spinner} style={{ width: '28px', height: '28px' }} />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

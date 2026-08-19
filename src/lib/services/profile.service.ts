@@ -17,36 +17,13 @@ import { ThemeService, SYSTEM_DEFAULT_THEME_CONFIG } from './theme.service';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
-export interface ResolvedProfileItem {
-  id: string;
-  data: Record<string, unknown>;
-  displayOrder: number;
-}
+import {
+  type ResolvedProfile,
+  type ResolvedProfileSection,
+  type ResolvedProfileItem,
+} from '@/lib/types/profile.types';
 
-export interface ResolvedProfileSection {
-  id: string;
-  type: string;
-  title: string;
-  icon: string;
-  columns: number;
-  displayOrder: number;
-  items: ResolvedProfileItem[];
-}
-
-export interface ResolvedProfile {
-  profile: {
-    id: string;
-    name: string;
-    description: string | null;
-    hash: string;
-    isDefault: boolean;
-  };
-  basics: Record<string, unknown>;
-  summary: string;
-  picture: Record<string, unknown>;
-  theme: Record<string, unknown>;
-  sections: ResolvedProfileSection[];
-}
+export type { ResolvedProfile, ResolvedProfileSection, ResolvedProfileItem };
 
 export class ProfileService {
   /**

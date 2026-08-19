@@ -4,39 +4,12 @@ import {
   type CreateThemeInput,
   type UpdateThemeInput,
   type ThemeConfig,
+  SYSTEM_DEFAULT_THEME_CONFIG,
 } from '@/lib/validators/theme.validator';
+
+export { SYSTEM_DEFAULT_THEME_CONFIG };
 import { and, asc, eq } from 'drizzle-orm';
 
-export const SYSTEM_DEFAULT_THEME_CONFIG: ThemeConfig = {
-  colors: {
-    primary: '#6366f1',
-    secondary: '#8b5cf6',
-    background: '#090a0f',
-    surface: '#12141f',
-    text: '#f8fafc',
-    accent: '#38bdf8',
-    muted: '#94a3b8',
-    border: '#1e293b',
-  },
-  typography: {
-    headingFont: 'var(--font-geist-sans), system-ui, sans-serif',
-    bodyFont: 'var(--font-geist-sans), system-ui, sans-serif',
-    monoFont: 'var(--font-geist-mono), monospace',
-    baseFontSize: '16px',
-    scaleRatio: 1.25,
-  },
-  spacing: {
-    sectionGap: '3.5rem',
-    itemGap: '1.5rem',
-    contentMaxWidth: '860px',
-  },
-  layout: {
-    headerAlign: 'center',
-    sectionTitleAlign: 'left',
-    cardBorderRadius: '12px',
-    elevation: 'subtle',
-  },
-};
 
 export class ThemeService {
   static async getThemes(userId: string): Promise<Theme[]> {

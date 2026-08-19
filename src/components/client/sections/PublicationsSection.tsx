@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { type ResolvedProfileItem } from '@/lib/services/profile.service';
+import { type ResolvedProfileItem } from '@/lib/types/profile.types';
 import styles from '../client.module.css';
 
 interface PublicationItemData {
