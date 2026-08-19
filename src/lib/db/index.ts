@@ -3,8 +3,17 @@ import postgres from 'postgres';
 import * as schema from './schema';
 
 // Connection string from environment or build-time fallback
-const connectionString =
+let rawConnectionString =
   process.env.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
+
+if (
+  (rawConnectionString.startsWith('"') && rawConnectionString.endsWith('"')) ||
+  (rawConnectionString.startsWith("'") && rawConnectionString.endsWith("'"))
+) {
+  rawConnectionString = rawConnectionString.slice(1, -1);
+}
+
+const connectionString = rawConnectionString.trim();
 
 // Create postgres.js client with connection pooling settings
 // suitable for serverless environments (Vercel)
