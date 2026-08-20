@@ -1,32 +1,28 @@
 'use client';
 
 import React from 'react';
-import { type ResolvedProfileItem } from '@/lib/types/profile.types';
+import type { ResolvedProfileItem } from '@/lib/types/profile.types';
+import { formatHref } from '@/lib/utils/url';
 import styles from '../client.module.css';
 
 interface ExperienceItemData {
   company?: string;
   position?: string;
-  location?: string;
   period?: string;
   date?: string;
+  location?: string;
   website?: string;
   url?: string;
   description?: string;
   summary?: string;
-  roles?: Array<{
-    title?: string;
-    position?: string;
-    period?: string;
-    date?: string;
-    description?: string;
-  }>;
+  roles?: string[];
   tags?: string[];
   keywords?: string[];
 }
 
 interface ExperienceSectionProps {
   items: ResolvedProfileItem[];
+  columns?: number;
 }
 
 export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) => {
@@ -40,7 +36,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
         const position = data.position || '';
         const period = data.period || data.date || '';
         const location = data.location || '';
-        const website = data.website || data.url || '';
+        const websiteHref = formatHref(data.website || data.url);
         const description = data.description || data.summary || '';
         const roles = data.roles || [];
         const tags = data.tags || data.keywords || [];
@@ -57,9 +53,9 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
 
               {/* Company & Location Row */}
               <div className={styles.experienceCompanyRow}>
-                {website ? (
+                {websiteHref ? (
                   <a
-                    href={website.startsWith('http') ? website : `https://${website}`}
+                    href={websiteHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.experienceCompanyLink}
@@ -74,19 +70,10 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
                 ) : (
                   <span className={styles.experienceCompany}>{company}</span>
                 )}
-
-                {location && (
-                  <span className={styles.experienceLocation}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span>{location}</span>
-                  </span>
-                )}
+                {location && <span className={styles.experienceLocation}>• {location}</span>}
               </div>
 
-              {/* Main Description */}
+              {/* Description */}
               {description && (
                 <div
                   className={styles.experienceDescription}
@@ -94,29 +81,19 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
                 />
               )}
 
-              {/* Multi-role career progression */}
+              {/* Multi-Role Highlights if present */}
               {roles.length > 0 && (
-                <div className={styles.rolesProgression}>
-                  {roles.map((role, idx) => (
-                    <div key={idx}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <span className={styles.roleStepTitle}>{role.title || role.position}</span>
-                        {(role.period || role.date) && (
-                          <span className={styles.roleStepPeriod}>{role.period || role.date}</span>
-                        )}
-                      </div>
-                      {role.description && (
-                        <div
-                          className={styles.experienceDescription}
-                          dangerouslySetInnerHTML={{ __html: role.description }}
-                        />
-                      )}
+                <div className={styles.roleSubList}>
+                  {roles.map((role, rIdx) => (
+                    <div key={rIdx} className={styles.roleSubItem}>
+                      <span className={styles.roleBullet}>▹</span>
+                      <span>{role}</span>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Tech Stack Badge Tags */}
+              {/* Tech Tags */}
               {tags.length > 0 && (
                 <div className={styles.tagList}>
                   {tags.map((tag, tIdx) => (

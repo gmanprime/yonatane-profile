@@ -4,6 +4,7 @@ import { ProfileService } from '@/lib/services/profile.service';
 import { PortfolioService } from '@/lib/services/portfolio.service';
 import { ProfileRenderer } from '@/components/client/ProfileRenderer';
 import { PersonJsonLd } from '@/components/seo/JsonLd';
+import { extractUrl } from '@/lib/utils/url';
 
 export const revalidate = 0;
 
@@ -89,7 +90,7 @@ export default async function StealthProfilePage({ params }: StealthProfilePageP
   const socialLinks: string[] = [];
   if (profSec) {
     for (const item of profSec.items) {
-      const url = (item.data as any)?.website?.url;
+      const url = extractUrl((item.data as any)?.website || (item.data as any)?.url);
       if (url) socialLinks.push(url);
     }
   }

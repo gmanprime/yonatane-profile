@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { type ResolvedProfileItem } from '@/lib/types/profile.types';
+import { formatHref } from '@/lib/utils/url';
 import styles from '../client.module.css';
 
 interface EducationItemData {
@@ -31,7 +32,7 @@ interface EducationSectionProps {
 export const EducationSection: React.FC<EducationSectionProps> = ({ items, columns = 1 }) => {
   if (items.length === 0) return null;
 
-  const gridClass = columns > 1 ? styles.sectionGrid2Col : styles.sectionGrid1Col;
+  const gridClass = columns === 2 ? styles.educationGrid2Col : styles.educationGrid1Col;
 
   return (
     <div className={gridClass}>
@@ -43,7 +44,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({ items, colum
         const period = data.period || data.date || '';
         const location = data.location || '';
         const grade = data.grade || data.score || data.gpa || '';
-        const website = data.website || data.url || '';
+        const websiteHref = formatHref(data.website || data.url);
         const description = data.description || data.summary || '';
         const rawCourses = data.courses || [];
         const courses = Array.isArray(rawCourses) ? rawCourses : rawCourses ? [rawCourses] : [];
@@ -55,9 +56,9 @@ export const EducationSection: React.FC<EducationSectionProps> = ({ items, colum
             </div>
 
             <div className={styles.educationSchoolRow}>
-              {website ? (
+              {websiteHref ? (
                 <a
-                  href={website.startsWith('http') ? website : `https://${website}`}
+                  href={websiteHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.educationSchool}

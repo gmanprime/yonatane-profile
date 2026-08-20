@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { type ResolvedProfileItem } from '@/lib/types/profile.types';
+import type { ResolvedProfileItem } from '@/lib/types/profile.types';
+import { formatHref } from '@/lib/utils/url';
 import styles from '../client.module.css';
 
 interface VolunteerItemData {
@@ -34,7 +35,7 @@ export const VolunteerSection: React.FC<VolunteerSectionProps> = ({ items, colum
         const position = data.position || 'Volunteer';
         const period = data.period || data.date || '';
         const location = data.location || '';
-        const website = data.website || data.url || '';
+        const websiteHref = formatHref(data.website || data.url);
         const description = data.description || data.summary || '';
 
         return (
@@ -45,9 +46,9 @@ export const VolunteerSection: React.FC<VolunteerSectionProps> = ({ items, colum
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-              {website ? (
+              {websiteHref ? (
                 <a
-                  href={website.startsWith('http') ? website : `https://${website}`}
+                  href={websiteHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.genericLink}

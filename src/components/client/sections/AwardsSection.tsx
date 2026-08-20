@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { type ResolvedProfileItem } from '@/lib/types/profile.types';
+import type { ResolvedProfileItem } from '@/lib/types/profile.types';
+import { formatHref } from '@/lib/utils/url';
 import styles from '../client.module.css';
 
 interface AwardItemData {
@@ -31,7 +32,7 @@ export const AwardsSection: React.FC<AwardsSectionProps> = ({ items, columns = 2
         const title = data.title || 'Honors & Awards';
         const awarder = data.awarder || '';
         const date = data.date || '';
-        const website = data.website || data.url || '';
+        const websiteHref = formatHref(data.website || data.url);
         const description = data.description || data.summary || '';
 
         return (
@@ -50,9 +51,9 @@ export const AwardsSection: React.FC<AwardsSectionProps> = ({ items, columns = 2
               />
             )}
 
-            {website && (
+            {websiteHref && (
               <a
-                href={website.startsWith('http') ? website : `https://${website}`}
+                href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.genericLink}

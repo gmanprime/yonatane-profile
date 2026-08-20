@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { type ResolvedProfileItem } from '@/lib/types/profile.types';
+import type { ResolvedProfileItem } from '@/lib/types/profile.types';
+import { formatHref } from '@/lib/utils/url';
 import styles from '../client.module.css';
 
 interface CustomItemData {
@@ -35,7 +36,7 @@ export const CustomSection: React.FC<CustomSectionProps> = ({ items, columns = 1
         const title = data.title || data.name || '';
         const subtitle = data.subtitle || '';
         const period = data.period || data.date || '';
-        const website = data.website || data.url || '';
+        const websiteHref = formatHref(data.website || data.url);
         const description = data.description || data.summary || '';
         const tags = data.keywords || data.tags || [];
 
@@ -65,9 +66,9 @@ export const CustomSection: React.FC<CustomSectionProps> = ({ items, columns = 1
               </div>
             )}
 
-            {website && (
+            {websiteHref && (
               <a
-                href={website.startsWith('http') ? website : `https://${website}`}
+                href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.genericLink}

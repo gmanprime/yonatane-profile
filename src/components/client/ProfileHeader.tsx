@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { QRShareModal } from './QRShareModal';
+import { formatHref, formatUrlLabel } from '@/lib/utils/url';
 import styles from './client.module.css';
 
 interface ProfileHeaderProps {
@@ -34,8 +35,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       : (basics.location as Record<string, string>)?.city
       ? `${(basics.location as Record<string, string>).city}${(basics.location as Record<string, string>).country ? `, ${(basics.location as Record<string, string>).country}` : ''}`
       : (basics.location as Record<string, string>)?.address || '';
-  const website = (basics.website as string) || (basics.url as string) || '';
-  const customFields = (basics.customFields as Array<{ id: string; name: string; value: string; icon?: string }>) || [];
+
+  const websiteHref = formatHref(basics.website || basics.url);
+  const websiteLabel = formatUrlLabel(basics.website || basics.url);
+  const customFields = (basics.customFields as Array<Record<string, unknown>>) || [];
 
   const pictureUrl = (picture?.url as string) || (basics.picture as string) || null;
 
@@ -119,9 +122,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </span>
           )}
 
-          {website && (
+          {websiteHref && (
             <a
-              href={website.startsWith('http') ? website : `https://${website}`}
+              href={websiteHref}
               target="_blank"
               rel="noopener noreferrer"
               className={styles.contactItem}
@@ -131,16 +134,51 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <line x1="2" y1="12" x2="22" y2="12" />
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               </svg>
-              <span>{website.replace(/^https?:\/\//, '')}</span>
+              <span>{websiteLabel}</span>
             </a>
           )}
 
-          {customFields.map((cf) => (
-            <span key={cf.id || cf.name} className={styles.contactItem}>
-              <span style={{ fontWeight: 600, color: 'var(--theme-accent)' }}>{cf.name}:</span>
-              <span>{cf.value}</span>
-            </span>
-          ))}
+          {customFields.map((cf, idx) => {
+            const fieldName = (cf.name as string) || (cf.text as string) || '';
+            const fieldValue = (cf.value as string) || '';
+            const fieldLink = formatHref(cf.link || cf.url);
+
+            if (!fieldName && !fieldValue) return null;
+
+            if (fieldLink) {
+              return (
+                <a
+                  key={(cf.id as string) || `cf-${idx}`}
+                  href={fieldLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.contactItem}
+                >
+                  {fieldValue ? (
+                    <>
+                      <span style={{ fontWeight: 600, color: 'var(--theme-accent)' }}>{fieldName}:</span>
+                      <span>{fieldValue}</span>
+                    </>
+                  ) : (
+                    <span>{fieldName}</span>
+                  )}
+                </a>
+              );
+            }
+
+            return (
+              <span key={(cf.id as string) || `cf-${idx}`} className={styles.contactItem}>
+                {fieldValue ? (
+                  <>
+                    <span style={{ fontWeight: 600, color: 'var(--theme-accent)' }}>{fieldName}:</span>
+                    <span>{fieldValue}</span>
+                  </>
+                ) : (
+                  <span>{fieldName}</span>
+                )}
+              </span>
+            );
+          })}
         </div>
 
         {/* Action CTAs */}

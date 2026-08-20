@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { type ResolvedProfileItem } from '@/lib/types/profile.types';
+import type { ResolvedProfileItem } from '@/lib/types/profile.types';
+import { formatHref } from '@/lib/utils/url';
 import styles from '../client.module.css';
 
 interface ProjectItemData {
@@ -48,7 +49,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         const data = item.data as ProjectItemData;
         const name = data.name || data.title || 'Untitled Project';
         const period = data.period || data.date || '';
-        const website = data.website || data.url || '';
+        const websiteHref = formatHref(data.website || data.url);
         const description = data.description || data.summary || '';
         const tags = data.keywords || data.tags || [];
 
@@ -88,9 +89,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
             {/* Links & Case Study CTA */}
             <div className={styles.projectLinksRow}>
-              {website && (
+              {websiteHref && (
                 <a
-                  href={website.startsWith('http') ? website : `https://${website}`}
+                  href={websiteHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.projectDemoLink}
@@ -110,7 +111,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                   </svg>
-                  <span>Read Case Study</span>
+                  <span>Case Study</span>
                 </Link>
               )}
             </div>
