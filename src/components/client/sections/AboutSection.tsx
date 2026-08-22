@@ -329,6 +329,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
         <QRShareModal
           url={currentUrl}
           name={name}
+          basics={basics}
+          summary={summary}
           isOpen={showQRModal}
           onClose={() => setShowQRModal(false)}
         />

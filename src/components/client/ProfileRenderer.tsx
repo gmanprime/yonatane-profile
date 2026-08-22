@@ -233,6 +233,8 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
         <QRShareModal
           url={currentUrl}
           name={candidateName}
+          basics={profile.basics}
+          summary={profile.summary}
           isOpen={showQRModal}
           onClose={handleCloseQR}
         />

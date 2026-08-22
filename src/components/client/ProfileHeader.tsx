@@ -431,6 +431,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <QRShareModal
           url={currentUrl}
           name={name}
+          basics={basics}
+          summary={summary}
           isOpen={showQRModal}
           onClose={() => setShowQRModal(false)}
         />
