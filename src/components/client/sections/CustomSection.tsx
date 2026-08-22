@@ -11,7 +11,7 @@ interface CustomItemData {
   subtitle?: string;
   period?: string;
   date?: string;
-  website?: string;
+  website?: string | { url?: string; label?: string };
   url?: string;
   description?: string;
   summary?: string;
@@ -36,7 +36,8 @@ export const CustomSection: React.FC<CustomSectionProps> = ({ items, columns = 1
         const title = data.title || data.name || '';
         const subtitle = data.subtitle || '';
         const period = data.period || data.date || '';
-        const websiteHref = formatHref(data.website || data.url);
+        const rawUrl = typeof data.website === 'object' ? data.website?.url : (data.website || data.url);
+        const websiteHref = formatHref(rawUrl);
         const description = data.description || data.summary || '';
         const tags = data.keywords || data.tags || [];
 

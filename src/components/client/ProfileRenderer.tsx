@@ -74,8 +74,10 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
         {/* Telemetry Logger */}
         <ClientTelemetry profileId={profile.profile.id} />
 
-        {/* Ambient Glow */}
+        {/* Ambient Atmospheric Glow Mesh */}
         <div className={styles.backgroundGlow} />
+        <div className={styles.backgroundGlowSecondary} />
+        <div className={styles.backgroundGlowTertiary} />
 
         <div className={styles.contentWrapper}>
           {/* Hero Banner & Contact Info */}

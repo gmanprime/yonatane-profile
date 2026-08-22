@@ -10,7 +10,7 @@ interface CertificationItemData {
   name?: string;
   issuer?: string;
   date?: string;
-  website?: string;
+  website?: string | { url?: string; label?: string };
   url?: string;
   description?: string;
   summary?: string;
@@ -33,7 +33,8 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({ it
         const title = data.title || data.name || 'Certification';
         const issuer = data.issuer || '';
         const date = data.date || '';
-        const websiteHref = formatHref(data.website || data.url);
+        const rawUrl = typeof data.website === 'object' ? data.website?.url : (data.website || data.url);
+        const websiteHref = formatHref(rawUrl);
         const description = data.description || data.summary || '';
 
         return (

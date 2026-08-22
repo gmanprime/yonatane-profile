@@ -8,7 +8,7 @@ import styles from '../client.module.css';
 interface ProfileItemData {
   network?: string;
   username?: string;
-  website?: string;
+  website?: string | { url?: string; label?: string };
   url?: string;
   icon?: string;
 }
@@ -58,7 +58,8 @@ export const ProfilesSection: React.FC<ProfilesSectionProps> = ({ items }) => {
         const data = item.data as ProfileItemData;
         const network = data.network || 'Profile';
         const username = data.username || '';
-        const urlHref = formatHref(data.website || data.url);
+        const rawUrl = typeof data.website === 'object' ? data.website?.url : (data.website || data.url);
+        const urlHref = formatHref(rawUrl);
 
         const cardContent = (
           <>
@@ -73,8 +74,8 @@ export const ProfilesSection: React.FC<ProfilesSectionProps> = ({ items }) => {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
-              style={{ color: 'var(--theme-muted)', flexShrink: 0 }}
+              strokeWidth="2.5"
+              style={{ color: 'var(--theme-accent, #38bdf8)', flexShrink: 0 }}
             >
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
               <polyline points="15 3 21 3 21 9" />

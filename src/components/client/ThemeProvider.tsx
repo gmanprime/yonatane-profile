@@ -139,8 +139,30 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
       '--theme-header-align': (mergedTheme.layout.headerAlign as string) || 'center',
       '--theme-title-align': (mergedTheme.layout.sectionTitleAlign as string) || 'left',
-      '--theme-border-radius': (mergedTheme.layout.cardBorderRadius as string) || '12px',
+      '--theme-border-radius': (mergedTheme.layout.cardBorderRadius as string) || '20px',
       '--theme-elevation': (mergedTheme.layout.elevation as string) || 'subtle',
+
+      // Modern Bento Glassmorphic Variables
+      '--theme-surface-glass':
+        mergedTheme.colors.background === '#f8fafc' || mergedTheme.colors.background === '#ffffff'
+          ? 'rgba(255, 255, 255, 0.75)'
+          : 'color-mix(in srgb, var(--theme-surface, #12141f) 72%, transparent)',
+      '--theme-surface-glass-border':
+        mergedTheme.colors.background === '#f8fafc' || mergedTheme.colors.background === '#ffffff'
+          ? 'rgba(0, 0, 0, 0.08)'
+          : 'rgba(255, 255, 255, 0.09)',
+      '--theme-surface-glass-hover':
+        mergedTheme.colors.background === '#f8fafc' || mergedTheme.colors.background === '#ffffff'
+          ? 'rgba(255, 255, 255, 0.95)'
+          : 'color-mix(in srgb, var(--theme-surface, #12141f) 88%, transparent)',
+      '--theme-halo-glow':
+        'color-mix(in srgb, var(--theme-primary, #6366f1) 45%, var(--theme-accent, #38bdf8))',
+      '--theme-mesh-glow-1':
+        'color-mix(in srgb, var(--theme-primary, #6366f1) 22%, transparent)',
+      '--theme-mesh-glow-2':
+        'color-mix(in srgb, var(--theme-secondary, #8b5cf6) 18%, transparent)',
+      '--theme-mesh-glow-3':
+        'color-mix(in srgb, var(--theme-accent, #38bdf8) 15%, transparent)',
     } as React.CSSProperties;
   }, [mergedTheme]);
 
@@ -152,3 +174,4 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     </ThemeContext.Provider>
   );
 };
+

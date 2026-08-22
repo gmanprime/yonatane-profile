@@ -11,7 +11,7 @@ interface VolunteerItemData {
   location?: string;
   period?: string;
   date?: string;
-  website?: string;
+  website?: string | { url?: string; label?: string };
   url?: string;
   description?: string;
   summary?: string;
@@ -35,7 +35,8 @@ export const VolunteerSection: React.FC<VolunteerSectionProps> = ({ items, colum
         const position = data.position || 'Volunteer';
         const period = data.period || data.date || '';
         const location = data.location || '';
-        const websiteHref = formatHref(data.website || data.url);
+        const rawUrl = typeof data.website === 'object' ? data.website?.url : (data.website || data.url);
+        const websiteHref = formatHref(rawUrl);
         const description = data.description || data.summary || '';
 
         return (
@@ -63,7 +64,11 @@ export const VolunteerSection: React.FC<VolunteerSectionProps> = ({ items, colum
               ) : (
                 <span className={styles.genericItemSubtitle}>{org}</span>
               )}
-              {location && <span style={{ fontSize: '0.8rem', color: 'var(--theme-muted)' }}>• {location}</span>}
+              {location && (
+                <span style={{ fontSize: '0.8rem', color: 'var(--theme-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  • {location}
+                </span>
+              )}
             </div>
 
             {description && (
