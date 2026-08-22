@@ -1228,6 +1228,47 @@
 }
 
 /* ============================================================
+   About Section - Public Profiles & Networks Subsection
+   ============================================================ */
+.aboutProfilesCard {
+  padding: 1.25rem;
+  border-radius: 20px;
+  background: var(--theme-surface-glass, rgba(18, 20, 31, 0.6));
+  border: 1px solid var(--theme-surface-glass-border, rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  margin-bottom: 0.5rem;
+}
+
+.aboutProfilesHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--theme-accent, #38bdf8);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--theme-border, #1e293b);
+  letter-spacing: -0.01em;
+}
+
+.aboutProfilesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .aboutProfilesGrid {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+}
+
+/* ============================================================
    Action CTAs - Responsive Ratio & Horizontal Fit
    ============================================================ */
 .aboutActionsRow {

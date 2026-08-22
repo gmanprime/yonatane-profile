@@ -56,20 +56,33 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
     return map;
   }, [portfolioArticles]);
 
+  // Extract profileItems (social links/networks) for integration into About section
+  const profileItems = useMemo(() => {
+    return profile.sections.find(
+      (sec) => sec.type.toLowerCase() === 'profiles' || sec.type.toLowerCase() === 'social'
+    )?.items || [];
+  }, [profile.sections]);
+
+  // Filter sections excluding profiles (which are embedded inside About)
+  const visibleSections = useMemo(() => {
+    return profile.sections.filter((sec) => {
+      const isProfileType = sec.type.toLowerCase() === 'profiles' || sec.type.toLowerCase() === 'social';
+      return !isProfileType && sec.items && sec.items.length > 0;
+    });
+  }, [profile.sections]);
+
   // Extract navigation sections with About as primary splash entry
   const navSections: NavSection[] = useMemo(() => {
     const sections: NavSection[] = [
       { id: 'about', title: 'About', type: 'about' },
-      ...profile.sections
-        .filter((sec) => sec.items && sec.items.length > 0)
-        .map((sec) => ({
-          id: sec.id,
-          title: sec.title,
-          type: sec.type,
-        })),
+      ...visibleSections.map((sec) => ({
+        id: sec.id,
+        title: sec.title,
+        type: sec.type,
+      })),
     ];
     return sections;
-  }, [profile.sections]);
+  }, [visibleSections]);
 
   const [showQRModal, setShowQRModal] = React.useState(false);
   const [selectedTabId, setSelectedTabId] = React.useState<string>('about');
@@ -163,10 +176,11 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
                 hash={hash}
                 hasPortfolio={hasPortfolio}
                 onOpenQR={handleOpenQR}
+                profileItems={profileItems}
               />
             </section>
 
-            {profile.sections.map((section) => (
+            {visibleSections.map((section) => (
               <RenderSection
                 key={section.id}
                 section={section}

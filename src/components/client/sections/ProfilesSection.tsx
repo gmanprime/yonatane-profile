@@ -5,7 +5,7 @@ import type { ResolvedProfileItem } from '@/lib/types/profile.types';
 import { formatHref } from '@/lib/utils/url';
 import styles from '../client.module.css';
 
-interface ProfileItemData {
+export interface ProfileItemData {
   network?: string;
   username?: string;
   website?: string | { url?: string; label?: string };
@@ -13,11 +13,11 @@ interface ProfileItemData {
   icon?: string;
 }
 
-interface ProfilesSectionProps {
+export interface ProfilesSectionProps {
   items: ResolvedProfileItem[];
 }
 
-const getNetworkIcon = (network: string) => {
+export const getNetworkIcon = (network: string) => {
   const n = network.toLowerCase();
   if (n.includes('github')) {
     return (
