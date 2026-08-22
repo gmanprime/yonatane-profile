@@ -2190,6 +2190,18 @@
   color: var(--theme-accent, #38bdf8);
 }
 
+.footerAdminLink {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+
+.footerAdminLink:hover {
+  color: var(--theme-accent, #38bdf8);
+  text-decoration: underline;
+}
+
 /* ============================================================
    QR Code Share Modal
    ============================================================ */
@@ -2286,6 +2298,7 @@
 .profileSocialCard:focus-visible,
 .genericLink:focus-visible,
 .footerLink:focus-visible,
+.footerAdminLink:focus-visible,
 .modalCloseBtn:focus-visible {
   outline: 2px solid var(--theme-accent, #38bdf8);
   outline-offset: 2px;

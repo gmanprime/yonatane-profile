@@ -204,12 +204,17 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
                     Portfolio & Articles
                   </Link>
                 )}
-                <Link href="/admin/login" className={styles.footerLink}>
-                  Admin Portal
-                </Link>
               </div>
               <p style={{ margin: 0 }}>
-                &copy; {currentYear} {candidateName}. All rights reserved.
+                &copy; {currentYear}{' '}
+                <Link
+                  href="/admin/login"
+                  className={styles.footerAdminLink}
+                  title="Admin Portal"
+                >
+                  {candidateName}
+                </Link>
+                . All rights reserved.
               </p>
             </footer>
           </main>
