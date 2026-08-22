@@ -111,11 +111,12 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
     <div>
       {/* Interactive Filter Pills */}
       {filterOptions.length > 0 && (
-        <div className={styles.filterBar}>
+        <div className={styles.filterBar} role="toolbar" aria-label="Projects domain filter">
           <button
             type="button"
             className={`${styles.filterPill} ${selectedFilter === 'all' ? styles.filterPillActive : ''}`}
             onClick={() => setSelectedFilter('all')}
+            aria-pressed={selectedFilter === 'all'}
           >
             <span>All Projects</span>
             <span className={styles.filterCountBadge}>{items.length}</span>
@@ -133,13 +134,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
             }).length;
 
             if (count === 0) return null;
+            const isOptActive = selectedFilter === opt;
 
             return (
               <button
                 key={opt}
                 type="button"
-                className={`${styles.filterPill} ${selectedFilter === opt ? styles.filterPillActive : ''}`}
+                className={`${styles.filterPill} ${isOptActive ? styles.filterPillActive : ''}`}
                 onClick={() => setSelectedFilter(selectedFilter === opt ? 'all' : opt)}
+                aria-pressed={isOptActive}
               >
                 <span>{opt}</span>
                 <span className={styles.filterCountBadge}>{count}</span>

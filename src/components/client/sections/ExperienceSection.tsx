@@ -62,11 +62,12 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
     <div>
       {/* Optional Interactive Filter Bar if there are multiple tags */}
       {allTags.length > 2 && (
-        <div className={styles.filterBar}>
+        <div className={styles.filterBar} role="toolbar" aria-label="Experience milestones filter">
           <button
             type="button"
             className={`${styles.filterPill} ${!selectedTag ? styles.filterPillActive : ''}`}
             onClick={() => setSelectedTag(null)}
+            aria-pressed={!selectedTag}
           >
             <span>All Milestones</span>
             <span className={styles.filterCountBadge}>{items.length}</span>
@@ -81,13 +82,15 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
                 desc.includes(tag.toLowerCase())
               );
             }).length;
+            const isTagActive = selectedTag === tag;
 
             return (
               <button
                 key={tag}
                 type="button"
-                className={`${styles.filterPill} ${selectedTag === tag ? styles.filterPillActive : ''}`}
+                className={`${styles.filterPill} ${isTagActive ? styles.filterPillActive : ''}`}
                 onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                aria-pressed={isTagActive}
               >
                 <span>{tag}</span>
                 <span className={styles.filterCountBadge}>{count}</span>
@@ -102,10 +105,8 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
         </div>
       )}
 
-      {/* Career Milestone Timeline with Glowing Rail */}
+      {/* Career Milestone Timeline Cards */}
       <div className={styles.experienceTimeline}>
-        <div className={styles.milestoneRail} />
-
         {filteredItems.map((item) => {
           const data = item.data as ExperienceItemData;
           const company = data.company || 'Organization';
@@ -119,24 +120,25 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
           const tags = data.tags || data.keywords || [];
 
           return (
-            <div key={item.id} className={styles.timelineItem}>
-              <div className={styles.timelineMarker} />
-              <div className={styles.timelineCard}>
-                {/* Header: Position & Milestone Date Chip */}
-                <div className={styles.experienceHeader}>
+            <div key={item.id} className={styles.timelineCard}>
+              {/* Header: Position & Milestone Date Chip */}
+              <div className={styles.experienceHeader}>
+                <div className={styles.experienceRoleGroup}>
+                  <span className={styles.timelineMarkerDot} aria-hidden="true" />
                   <h3 className={styles.experienceRole}>{position || company}</h3>
-                  {period && (
-                    <span className={styles.milestoneDateChip}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>{period}</span>
-                    </span>
-                  )}
                 </div>
+                {period && (
+                  <span className={styles.milestoneDateChip}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span>{period}</span>
+                  </span>
+                )}
+              </div>
 
                 {/* Company & Location Row */}
                 <div className={styles.experienceCompanyRow}>
@@ -200,7 +202,6 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ items }) =
                   </div>
                 )}
               </div>
-            </div>
           );
         })}
       </div>

@@ -6,6 +6,8 @@ import { type ResolvedProfile, type ResolvedProfileSection } from '@/lib/types/p
 import { ThemeProvider } from './ThemeProvider';
 import { ProfileHeader } from './ProfileHeader';
 import { SectionNav, type NavSection } from './SectionNav';
+import { MobileNavDock } from './MobileNavDock';
+import { QRShareModal } from './QRShareModal';
 import { ExperienceSection } from './sections/ExperienceSection';
 import { EducationSection } from './sections/EducationSection';
 import { SkillsSection } from './sections/SkillsSection';
@@ -17,6 +19,7 @@ import { LanguagesSection } from './sections/LanguagesSection';
 import { PublicationsSection } from './sections/PublicationsSection';
 import { VolunteerSection } from './sections/VolunteerSection';
 import { CustomSection } from './sections/CustomSection';
+import { AboutSection } from './sections/AboutSection';
 import { ClientTelemetry } from './ClientTelemetry';
 import styles from './client.module.css';
 
@@ -37,7 +40,7 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
   portfolioArticles = [],
   hash,
 }) => {
-  // Build map of projectItemId -> portfolio article
+  // Map project item IDs to corresponding published portfolio articles
   const portfolioArticleMap = useMemo(() => {
     const map: Record<string, LinkedPortfolioArticle> = {};
     for (const art of portfolioArticles) {
@@ -53,20 +56,31 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
     return map;
   }, [portfolioArticles]);
 
-  // Extract navigation sections for visible sections with items
+  // Extract navigation sections with About as primary splash entry
   const navSections: NavSection[] = useMemo(() => {
-    return profile.sections
-      .filter((sec) => sec.items && sec.items.length > 0)
-      .map((sec) => ({
-        id: sec.id,
-        title: sec.title,
-        type: sec.type,
-      }));
+    const sections: NavSection[] = [
+      { id: 'about', title: 'About', type: 'about' },
+      ...profile.sections
+        .filter((sec) => sec.items && sec.items.length > 0)
+        .map((sec) => ({
+          id: sec.id,
+          title: sec.title,
+          type: sec.type,
+        })),
+    ];
+    return sections;
   }, [profile.sections]);
+
+  const [showQRModal, setShowQRModal] = React.useState(false);
+  const [selectedTabId, setSelectedTabId] = React.useState<string>('about');
 
   const candidateName = (profile.basics.name as string) || profile.profile.name || 'Yonatan Elias';
   const hasPortfolio = portfolioArticles.length > 0;
   const currentYear = new Date().getFullYear();
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://yonatanelias.dpdns.org';
+
+  const handleOpenQR = () => setShowQRModal(true);
+  const handleCloseQR = () => setShowQRModal(false);
 
   return (
     <ThemeProvider themeConfig={profile.theme}>
@@ -79,55 +93,128 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
         <div className={styles.backgroundGlowSecondary} />
         <div className={styles.backgroundGlowTertiary} />
 
-        <div className={styles.contentWrapper}>
-          {/* Hero Banner & Contact Info */}
-          <ProfileHeader
-            basics={profile.basics}
-            summary={profile.summary}
-            picture={profile.picture}
-            profileName={profile.profile.name}
-            hash={hash}
-            hasPortfolio={hasPortfolio}
-          />
+        <div className={styles.desktopLayoutContainer}>
+          {/* Left Sticky Sidebar (Desktop) / Centered Hero Column (Mobile) */}
+          <aside className={styles.desktopAside}>
+            {/* Desktop-Only Compact Sidebar Header */}
+            <div className={styles.desktopAsideHeader}>
+              <ProfileHeader
+                basics={profile.basics}
+                summary={profile.summary}
+                picture={profile.picture}
+                profileName={profile.profile.name}
+                hash={hash}
+                hasPortfolio={hasPortfolio}
+                onOpenQR={handleOpenQR}
+                compact={true}
+                onSelectAbout={() => setSelectedTabId('about')}
+              />
+            </div>
 
-          {/* Sticky Section Navigation */}
-          <SectionNav sections={navSections} />
+            {/* Mobile-Only Full Hero Header */}
+            <div className={styles.mobileHeroHeader}>
+              <ProfileHeader
+                basics={profile.basics}
+                summary={profile.summary}
+                picture={profile.picture}
+                profileName={profile.profile.name}
+                hash={hash}
+                hasPortfolio={hasPortfolio}
+                onOpenQR={handleOpenQR}
+                compact={false}
+              />
+            </div>
 
-          {/* Dynamic Resume Sections */}
-          <main>
+            {/* Desktop Vertical Section Navigation */}
+            <div className={styles.desktopNavWrapper}>
+              <SectionNav
+                sections={navSections}
+                vertical
+                selectedTabId={selectedTabId}
+                onSelectTab={setSelectedTabId}
+              />
+            </div>
+          </aside>
+
+          {/* Right Modular Content Pane */}
+          <main className={styles.desktopMainContent}>
+            {/* Dedicated Desktop About & Executive Overview Splash Section */}
+            <section
+              id="about"
+              className={`${styles.sectionBlock} ${styles.aboutSectionBlock} ${selectedTabId === 'about' ? styles.sectionActiveTab : styles.sectionInactiveTab}`}
+              aria-labelledby="section-heading-about"
+            >
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionTitleGroup}>
+                  <svg className={styles.sectionIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <h2 id="section-heading-about" className={styles.sectionTitle}>
+                    About & Executive Overview
+                  </h2>
+                </div>
+              </div>
+
+              <AboutSection
+                basics={profile.basics}
+                summary={profile.summary}
+                profileName={profile.profile.name}
+                hash={hash}
+                hasPortfolio={hasPortfolio}
+                onOpenQR={handleOpenQR}
+              />
+            </section>
+
             {profile.sections.map((section) => (
               <RenderSection
                 key={section.id}
                 section={section}
                 portfolioArticleMap={portfolioArticleMap}
                 hash={hash}
+                isActiveTab={section.id === selectedTabId}
               />
             ))}
-          </main>
 
-          {/* Client Footer */}
-          <footer className={styles.clientFooter}>
-            <div className={styles.footerLinks}>
-              <Link href="/" className={styles.footerLink}>
-                Home Profile
-              </Link>
-              {hasPortfolio && (
-                <Link
-                  href={hash && hash !== 'default' ? `/p/${hash}/blog` : '/portfolio'}
-                  className={styles.footerLink}
-                >
-                  Portfolio & Articles
+            {/* Client Footer */}
+            <footer className={styles.clientFooter}>
+              <div className={styles.footerLinks}>
+                <Link href="/" className={styles.footerLink}>
+                  Home Profile
                 </Link>
-              )}
-              <Link href="/admin/login" className={styles.footerLink}>
-                Admin Portal
-              </Link>
-            </div>
-            <p style={{ margin: 0 }}>
-              &copy; {currentYear} {candidateName}. All rights reserved.
-            </p>
-          </footer>
+                {hasPortfolio && (
+                  <Link
+                    href={hash && hash !== 'default' ? `/p/${hash}/blog` : '/portfolio'}
+                    className={styles.footerLink}
+                  >
+                    Portfolio & Articles
+                  </Link>
+                )}
+                <Link href="/admin/login" className={styles.footerLink}>
+                  Admin Portal
+                </Link>
+              </div>
+              <p style={{ margin: 0 }}>
+                &copy; {currentYear} {candidateName}. All rights reserved.
+              </p>
+            </footer>
+          </main>
         </div>
+
+        {/* Floating Mobile Quick-Jump Navigation Dock */}
+        <MobileNavDock
+          sections={navSections}
+          onOpenQR={handleOpenQR}
+          onDownloadResume={() => window.print()}
+        />
+
+        {/* Share / QR Modal */}
+        <QRShareModal
+          url={currentUrl}
+          name={candidateName}
+          isOpen={showQRModal}
+          onClose={handleCloseQR}
+        />
       </div>
     </ThemeProvider>
   );
@@ -229,23 +316,33 @@ function RenderSection({
   section,
   portfolioArticleMap,
   hash,
+  isActiveTab,
 }: {
   section: ResolvedProfileSection;
   portfolioArticleMap: Record<string, LinkedPortfolioArticle>;
   hash?: string;
+  isActiveTab?: boolean;
 }) {
   if (!section.items || section.items.length === 0) {
     return null;
   }
 
   return (
-    <section id={section.id} className={styles.sectionBlock}>
+    <section
+      id={section.id}
+      className={`${styles.sectionBlock} ${isActiveTab ? styles.sectionActiveTab : styles.sectionInactiveTab}`}
+      aria-labelledby={`section-heading-${section.id}`}
+    >
       <div className={styles.sectionHeader}>
         <div className={styles.sectionTitleGroup}>
           {getSectionIcon(section.type)}
-          <h2 className={styles.sectionTitle}>{section.title}</h2>
+          <h2 id={`section-heading-${section.id}`} className={styles.sectionTitle}>
+            {section.title}
+          </h2>
         </div>
-        <span className={styles.sectionCountBadge}>{section.items.length}</span>
+        <span className={styles.sectionCountBadge} aria-label={`${section.items.length} items`}>
+          {section.items.length}
+        </span>
       </div>
 
       {(() => {

@@ -120,7 +120,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ items, columns = 2
     <div>
       {/* Interactive Filter Pills Bar */}
       {categories.length > 1 && (
-        <div className={styles.filterBar}>
+        <div className={styles.filterBar} role="toolbar" aria-label="Skills category filter">
           <button
             type="button"
             className={`${styles.filterPill} ${selectedCategory === 'all' && !searchQuery ? styles.filterPillActive : ''}`}
@@ -128,6 +128,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ items, columns = 2
               setSelectedCategory('all');
               setSearchQuery('');
             }}
+            aria-pressed={selectedCategory === 'all' && !searchQuery}
           >
             <span>All Categories</span>
             <span className={styles.filterCountBadge}>{items.length}</span>
@@ -138,16 +139,18 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ items, columns = 2
               const data = item.data as SkillItemData;
               return (data.name || '').toLowerCase() === cat.toLowerCase();
             }).length;
+            const isCatActive = selectedCategory === cat;
 
             return (
               <button
                 key={cat}
                 type="button"
-                className={`${styles.filterPill} ${selectedCategory === cat ? styles.filterPillActive : ''}`}
+                className={`${styles.filterPill} ${isCatActive ? styles.filterPillActive : ''}`}
                 onClick={() => {
                   setSelectedCategory(selectedCategory === cat ? 'all' : cat);
                   setSearchQuery('');
                 }}
+                aria-pressed={isCatActive}
               >
                 <span>{cat}</span>
                 <span className={styles.filterCountBadge}>{count}</span>

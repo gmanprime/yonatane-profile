@@ -1,24 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { type NavSection } from './SectionNav';
 import { useScrollSpy } from '@/lib/hooks/useScrollSpy';
 import styles from './client.module.css';
 
-export interface NavSection {
-  id: string;
-  title: string;
-  type: string;
-}
-
-interface SectionNavProps {
+interface MobileNavDockProps {
   sections: NavSection[];
-  vertical?: boolean;
-  selectedTabId?: string;
-  onSelectTab?: (id: string) => void;
+  onOpenQR?: () => void;
+  onDownloadResume?: () => void;
 }
 
-// Compact SVG Section Icons for Desktop Vertical Navigation
-function getNavSectionIcon(type: string) {
+// Compact SVG Section Icons for Dock
+function getDockSectionIcon(type: string) {
   const normType = type.toLowerCase();
   switch (normType) {
     case 'about':
@@ -116,76 +110,138 @@ function getNavSectionIcon(type: string) {
   }
 }
 
-export const SectionNav: React.FC<SectionNavProps> = ({
+export const MobileNavDock: React.FC<MobileNavDockProps> = ({
   sections,
-  vertical = false,
-  selectedTabId,
-  onSelectTab,
+  onOpenQR,
+  onDownloadResume,
 }) => {
   const sectionIds = sections.map((s) => s.id);
-  const spyActiveId = useScrollSpy(sectionIds, { offset: 140 });
+  const activeSectionId = useScrollSpy(sectionIds, { offset: 140 });
+  const [isScrolledDown, setIsScrolledDown] = useState(false);
+  const activePillRef = useRef<HTMLButtonElement | null>(null);
+  const scrollRailRef = useRef<HTMLDivElement | null>(null);
 
-  if (sections.length <= 1) return null;
+  // Monitor scroll depth for back-to-top button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolledDown(window.scrollY > 250);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handleTabClick = (secId: string, type: string) => {
-    if (vertical && onSelectTab) {
-      onSelectTab(secId);
-      if (typeof window !== 'undefined' && window.scrollY > 80) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } else {
-      const el = document.getElementById(secId) || document.getElementById(`section-${type}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
+  // Auto-scroll active pill into view within horizontal rail
+  useEffect(() => {
+    if (activePillRef.current && scrollRailRef.current) {
+      activePillRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [activeSectionId]);
+
+  if (sections.length === 0) return null;
+
+  const scrollToSection = (sectionId: string, type: string) => {
+    const el = document.getElementById(sectionId) || document.getElementById(`section-${type}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  if (vertical) {
-    return (
-      <nav className={styles.desktopVerticalNav} aria-label="Desktop section navigation">
-        <div className={styles.desktopNavTitle}>Sections</div>
-        <div className={styles.desktopNavList}>
-          {sections.map((sec) => {
-            const isActive = selectedTabId ? selectedTabId === sec.id : spyActiveId === sec.id;
-            return (
-              <button
-                key={sec.id}
-                type="button"
-                onClick={() => handleTabClick(sec.id, sec.type)}
-                className={`${styles.desktopNavPill} ${isActive ? styles.desktopNavPillActive : ''}`}
-                aria-current={isActive ? 'true' : undefined}
-                title={`View ${sec.title}`}
-              >
-                <span className={styles.navIndicatorDot} aria-hidden="true" />
-                <span className={styles.desktopNavIcon}>{getNavSectionIcon(sec.type)}</span>
-                <span className={styles.desktopNavPillTitle}>{sec.title}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-    );
-  }
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePrint = () => {
+    if (onDownloadResume) {
+      onDownloadResume();
+    } else {
+      window.print();
+    }
+  };
 
   return (
-    <div className={styles.stickyNavWrapper}>
-      <nav className={styles.stickyNav} aria-label="Resume sections navigation">
+    <div
+      className={`${styles.mobileNavDockWrapper} ${isScrolledDown ? styles.mobileNavDockVisible : ''}`}
+      role="navigation"
+      aria-label="Mobile quick jump navigation dock"
+    >
+      {/* Horizontal Scrollable Section Pills */}
+      <div className={styles.mobileDockScrollRail} ref={scrollRailRef}>
         {sections.map((sec) => {
-          const isActive = spyActiveId === sec.id;
+          const isActive = activeSectionId === sec.id;
           return (
             <button
               key={sec.id}
+              ref={isActive ? activePillRef : null}
               type="button"
-              onClick={() => handleTabClick(sec.id, sec.type)}
-              className={`${styles.navPill} ${isActive ? styles.navPillActive : ''}`}
+              onClick={() => scrollToSection(sec.id, sec.type)}
+              className={`${styles.mobileDockPill} ${isActive ? styles.mobileDockPillActive : ''}`}
+              title={`Jump to ${sec.title}`}
               aria-current={isActive ? 'true' : undefined}
             >
-              {sec.title}
+              <span className={styles.mobileDockPillIcon}>
+                {getDockSectionIcon(sec.type)}
+              </span>
+              <span className={styles.mobileDockPillLabel}>{sec.title}</span>
             </button>
           );
         })}
-      </nav>
+      </div>
+
+      {/* Dock Divider */}
+      <div className={styles.mobileDockDivider} aria-hidden="true" />
+
+      {/* Quick Action Triggers */}
+      <div className={styles.mobileDockActions}>
+        {onOpenQR && (
+          <button
+            type="button"
+            onClick={onOpenQR}
+            className={styles.mobileDockActionBtn}
+            title="Share profile & QR code"
+            aria-label="Share profile & QR code"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={handlePrint}
+          className={styles.mobileDockActionBtn}
+          title="Download resume PDF"
+          aria-label="Download resume PDF"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+
+        {isScrolledDown && (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            className={`${styles.mobileDockActionBtn} ${styles.mobileDockActionBtnTop}`}
+            title="Back to top"
+            aria-label="Back to top"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="18 15 12 9 6 15" />
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   );
 };
