@@ -608,15 +608,131 @@ export default function DatasetEditorPage({ params }: { params: Promise<{ id: st
               />
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>Profile Picture URL</label>
-              <input
-                type="url"
-                className={styles.input}
-                value={typeof picture.url === 'string' ? picture.url : ''}
-                onChange={(e) => setPicture({ ...picture, url: e.target.value })}
-                placeholder="https://..."
-              />
+            {/* Avatar & Framing Studio */}
+            <div className={styles.avatarStudioWrapper}>
+              <label className={styles.label} style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', marginBottom: '0.25rem' }}>
+                Profile Picture &amp; Framing Studio
+              </label>
+
+              <div className={styles.avatarStudioGrid}>
+                <div className={styles.avatarPreviewContainer}>
+                  <div className={styles.avatarPreviewHalo} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={(typeof picture.url === 'string' && picture.url) ? picture.url : '/avatar.jpg'}
+                    alt="Avatar Preview"
+                    className={styles.avatarPreviewImage}
+                    style={{
+                      borderRadius: typeof picture.borderRadius === 'number' ? `${picture.borderRadius}%` : '50%',
+                      objectPosition: (picture.objectPosition as string) || 'center 20%',
+                      filter: (picture.effects as any)?.grayscale ? 'grayscale(100%)' : undefined,
+                    }}
+                  />
+                </div>
+
+                <div className={styles.avatarControls}>
+                  <div className={styles.avatarButtonRow}>
+                    <label className={styles.avatarUploadBtn}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <span>Upload Local Photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              if (event.target?.result) {
+                                setPicture({
+                                  ...picture,
+                                  url: event.target.result as string,
+                                });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      className={styles.avatarSecondaryBtn}
+                      onClick={() => setPicture({ ...picture, url: '/avatar.jpg' })}
+                    >
+                      Use Master Headshot (/avatar.jpg)
+                    </button>
+                  </div>
+
+                  <div style={{ marginTop: '0.25rem' }}>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      value={typeof picture.url === 'string' ? picture.url : ''}
+                      onChange={(e) => setPicture({ ...picture, url: e.target.value })}
+                      placeholder="Or enter image URL (https://... or data:image/...)"
+                      style={{ fontSize: '0.75rem' }}
+                    />
+                  </div>
+
+                  <div className={styles.avatarOptionsRow}>
+                    <div>
+                      <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Focal Alignment</label>
+                      <select
+                        className={styles.input}
+                        style={{ padding: '0.375rem 0.5rem', fontSize: '0.75rem' }}
+                        value={(picture.objectPosition as string) || 'center 20%'}
+                        onChange={(e) => setPicture({ ...picture, objectPosition: e.target.value })}
+                      >
+                        <option value="center 20%">Portrait / Face Focus (Top 20%)</option>
+                        <option value="center top">Top Aligned</option>
+                        <option value="center center">True Center (50% 50%)</option>
+                        <option value="center 70%">Lower / Body Focus</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Frame Shape</label>
+                      <select
+                        className={styles.input}
+                        style={{ padding: '0.375rem 0.5rem', fontSize: '0.75rem' }}
+                        value={typeof picture.borderRadius === 'number' ? picture.borderRadius : 50}
+                        onChange={(e) => setPicture({ ...picture, borderRadius: Number(e.target.value) })}
+                      >
+                        <option value={50}>Circle (Halo Ring)</option>
+                        <option value={24}>Squircle (Soft Corner)</option>
+                        <option value={10}>Rounded Rectangle</option>
+                        <option value={0}>Square</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '0.375rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={Boolean((picture.effects as any)?.grayscale)}
+                          onChange={(e) =>
+                            setPicture({
+                              ...picture,
+                              effects: {
+                                ...(typeof picture.effects === 'object' ? (picture.effects as any) : {}),
+                                grayscale: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                        Grayscale Filter
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className={styles.field}>

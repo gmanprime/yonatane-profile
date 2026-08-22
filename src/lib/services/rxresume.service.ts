@@ -241,11 +241,32 @@ export class RxResumeService {
       ? (rawResume.data as Record<string, unknown>)
       : rawResume;
 
-    const title = customName || (rawResume.title as string) || (rawResume.name as string) || 'RxResume Cloud Sync';
     const defaultKey = await this.getDefaultApiKey();
     const defaultBase = await this.getDefaultBaseUrl();
     const effectiveKey = (apiKey || defaultKey).trim();
     const effectiveBase = (baseUrl || defaultBase).trim();
+
+    // Auto-fetch remote avatar image and convert to Base64 Data URI so it is permanently stored in PostgreSQL
+    const picObj = (resumeData.picture && typeof resumeData.picture === 'object') ? (resumeData.picture as Record<string, unknown>) : null;
+    if (picObj && typeof picObj.url === 'string' && picObj.url.startsWith('http')) {
+      try {
+        const imgRes = await fetch(picObj.url, {
+          headers: effectiveKey ? { 'x-api-key': effectiveKey } : {},
+          cache: 'no-store',
+        });
+        if (imgRes.ok) {
+          const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
+          const arrayBuffer = await imgRes.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          picObj.url = `data:${mimeType};base64,${base64}`;
+          resumeData.picture = picObj;
+        }
+      } catch (imgErr) {
+        console.warn('Could not auto-download remote avatar image as Base64 Data URI:', imgErr);
+      }
+    }
+
+    const title = customName || (rawResume.title as string) || (rawResume.name as string) || 'RxResume Cloud Sync';
 
     // Augment rawJson with resume ID and source metadata for subsequent proxy downloads
     const fullDatasetPayload = {

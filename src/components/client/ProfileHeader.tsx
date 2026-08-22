@@ -161,6 +161,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const customFields = (basics.customFields as Array<Record<string, unknown>>) || [];
 
   const pictureUrl = (picture?.url as string) || (basics.picture as string) || null;
+  const pictureEffects = (picture?.effects as Record<string, unknown>) || {};
+  const isGrayscale = Boolean(pictureEffects.grayscale);
+  const customBorderRadius = typeof picture?.borderRadius === 'number' ? `${picture.borderRadius}%` : undefined;
+  const customObjectPosition = (picture?.objectPosition as string) || 'center 20%';
 
   const initials = name
     .split(' ')
@@ -196,6 +200,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 src={pictureUrl}
                 alt={name}
                 className={styles.avatarImage}
+                style={{
+                  filter: isGrayscale ? 'grayscale(100%)' : undefined,
+                  borderRadius: customBorderRadius,
+                  objectPosition: customObjectPosition,
+                }}
                 onError={() => setImgError(true)}
               />
             ) : (
@@ -237,6 +246,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 src={pictureUrl}
                 alt={name}
                 className={styles.avatarImage}
+                style={{
+                  filter: isGrayscale ? 'grayscale(100%)' : undefined,
+                  borderRadius: customBorderRadius,
+                  objectPosition: customObjectPosition,
+                }}
                 onError={() => setImgError(true)}
               />
             ) : (
