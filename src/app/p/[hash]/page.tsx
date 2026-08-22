@@ -34,11 +34,9 @@ export async function generateMetadata({ params }: StealthProfilePageProps): Pro
       type: 'profile',
       images: [
         {
-          url:
-            (profile.picture.url as string) ||
-            'https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg',
+          url: (profile.picture.url as string) || `${siteUrl}/avatar.jpg`,
           width: 800,
-          height: 800,
+          height: 1000,
           alt: name,
         },
       ],
@@ -47,10 +45,7 @@ export async function generateMetadata({ params }: StealthProfilePageProps): Pro
       card: 'summary_large_image',
       title: `${profile.profile.name} — ${name}`,
       description,
-      images: [
-        (profile.picture.url as string) ||
-          'https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg',
-      ],
+      images: [(profile.picture.url as string) || `${siteUrl}/avatar.jpg`],
     },
   };
 }

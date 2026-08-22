@@ -53,9 +53,9 @@ export const metadata: Metadata = {
     siteName: "Yonatan Elias Profile Platform",
     images: [
       {
-        url: "https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg",
+        url: `${siteUrl}/avatar.jpg`,
         width: 800,
-        height: 800,
+        height: 1000,
         alt: "Yonatan Elias",
       },
     ],
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
       "Personal profile, engineering portfolio, and technical case studies of Yonatan Elias.",
     creator: "@yonatane504",
     images: [
-      "https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg",
+      `${siteUrl}/avatar.jpg`,
     ],
   },
   robots: {

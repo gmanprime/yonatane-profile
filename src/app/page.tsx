@@ -33,11 +33,9 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: 'Yonatan Elias Profile Platform',
       images: [
         {
-          url:
-            (profile?.picture?.url as string) ||
-            'https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg',
+          url: (profile?.picture?.url as string) || `${siteUrl}/avatar.jpg`,
           width: 800,
-          height: 800,
+          height: 1000,
           alt: name,
         },
       ],
@@ -46,10 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${name} | ${headline}`,
       description,
-      images: [
-        (profile?.picture?.url as string) ||
-          'https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg',
-      ],
+      images: [(profile?.picture?.url as string) || `${siteUrl}/avatar.jpg`],
     },
   };
 }

@@ -24,9 +24,7 @@ export async function generateMetadata({ params }: PortfolioArticlePageProps): P
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yonatanelias.dpdns.org';
-  const ogImage =
-    article.coverImageUrl ||
-    'https://rxresu.me/api/uploads/01a009e3-30f9-70ab-aa6e-80d9a91ef075/pictures/1786885952177.jpeg';
+  const ogImage = article.coverImageUrl || `${siteUrl}/avatar.jpg`;
 
   return {
     title: article.title,
