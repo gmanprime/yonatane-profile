@@ -1046,11 +1046,11 @@
 }
 
 .aboutStatTile {
-  background: radial-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%), var(--theme-surface-glass, rgba(18, 20, 31, 0.72));
+  background: radial-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%), var(--theme-surface-glass, rgba(18, 20, 31, 0.75));
   border: 1px solid var(--theme-surface-glass-border, rgba(255, 255, 255, 0.09));
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-radius: var(--theme-border-radius, 18px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--theme-border-radius, 20px);
   padding: 1.25rem 1rem;
   text-align: center;
   display: flex;
@@ -1058,15 +1058,15 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   box-sizing: border-box;
 }
 
 .aboutStatTile:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--theme-primary, #6366f1) 50%, transparent);
-  box-shadow: 0 12px 28px -6px var(--theme-primary-glow, rgba(99, 102, 241, 0.35));
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--theme-primary, #6366f1) 50%, var(--theme-border, #1e293b));
+  box-shadow: 0 20px 42px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .aboutStatValue {
@@ -1089,29 +1089,39 @@
 }
 
 .aboutBioCard,
-.aboutContactCard {
-  background: radial-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%), var(--theme-surface-glass, rgba(18, 20, 31, 0.72));
+.aboutContactCard,
+.aboutProfilesCard {
+  background: radial-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%), var(--theme-surface-glass, rgba(18, 20, 31, 0.75));
   border: 1px solid var(--theme-surface-glass-border, rgba(255, 255, 255, 0.09));
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--theme-border-radius, 20px);
-  padding: 1.5rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  padding: 1.6rem 1.85rem;
+  box-shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   box-sizing: border-box;
   width: 100%;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aboutBioCard:hover,
+.aboutContactCard:hover,
+.aboutProfilesCard:hover {
+  border-color: color-mix(in srgb, var(--theme-primary, #6366f1) 40%, var(--theme-surface-glass-border));
+  box-shadow: 0 18px 38px -8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .aboutBioHeading,
-.aboutContactHeading {
+.aboutContactHeading,
+.aboutProfilesHeading {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--theme-accent, #38bdf8);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--theme-border, #1e293b);
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   letter-spacing: -0.01em;
 }
 
@@ -1158,15 +1168,13 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0.85rem;
+  padding: 0.7rem 0.95rem;
   border-radius: 14px;
-  background: var(--theme-surface-glass, rgba(18, 20, 31, 0.6));
-  border: 1px solid var(--theme-surface-glass-border, rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   color: var(--theme-text, #f8fafc);
   text-decoration: none;
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 0;
   box-sizing: border-box;
@@ -1176,7 +1184,7 @@
 .contactTile:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--theme-accent, #38bdf8) 45%, transparent);
-  background: var(--theme-surface-glass-hover, rgba(26, 29, 45, 0.85));
+  background: rgba(255, 255, 255, 0.07);
   box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35), 0 0 12px color-mix(in srgb, var(--theme-accent, #38bdf8) 20%, transparent);
 }
 
@@ -1230,30 +1238,6 @@
 /* ============================================================
    About Section - Public Profiles & Networks Subsection
    ============================================================ */
-.aboutProfilesCard {
-  padding: 1.25rem;
-  border-radius: 20px;
-  background: var(--theme-surface-glass, rgba(18, 20, 31, 0.6));
-  border: 1px solid var(--theme-surface-glass-border, rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  margin-bottom: 0.5rem;
-}
-
-.aboutProfilesHeading {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--theme-accent, #38bdf8);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--theme-border, #1e293b);
-  letter-spacing: -0.01em;
-}
-
 .aboutProfilesGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1266,6 +1250,23 @@
     grid-template-columns: 1fr;
     gap: 0.55rem;
   }
+}
+
+.aboutProfilesGrid .profileSocialCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 0.85rem 1.15rem;
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.aboutProfilesGrid .profileSocialCard:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--theme-accent, #38bdf8);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35), 0 0 14px color-mix(in srgb, var(--theme-accent, #38bdf8) 20%, transparent);
 }
 
 /* ============================================================
