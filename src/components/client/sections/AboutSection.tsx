@@ -102,26 +102,41 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
           <span>Direct Contact & Profiles</span>
         </div>
 
-        <div className={styles.aboutContactChipsRow}>
+        <div className={styles.aboutContactGrid}>
           {email && (
-            <a href={`mailto:${email}`} className={styles.contactChip} title="Send Email">
-              <MailIcon />
-              <span>{email}</span>
+            <a href={`mailto:${email}`} className={styles.contactTile} title="Send Email">
+              <div className={styles.contactTileIconWrap}>
+                <MailIcon />
+              </div>
+              <div className={styles.contactTileTextWrap}>
+                <span className={styles.contactTileLabel}>Email</span>
+                <span className={styles.contactTileValue}>{email}</span>
+              </div>
             </a>
           )}
 
           {phone && (
-            <a href={`tel:${phone.replace(/\s+/g, '')}`} className={styles.contactChip} title="Call Phone">
-              <PhoneIcon />
-              <span>{phone}</span>
+            <a href={`tel:${phone.replace(/\s+/g, '')}`} className={styles.contactTile} title="Call Phone">
+              <div className={styles.contactTileIconWrap}>
+                <PhoneIcon />
+              </div>
+              <div className={styles.contactTileTextWrap}>
+                <span className={styles.contactTileLabel}>Phone</span>
+                <span className={styles.contactTileValue}>{phone}</span>
+              </div>
             </a>
           )}
 
           {location && (
-            <span className={styles.contactChip} title="Location">
-              <MapPinIcon />
-              <span>{location}</span>
-            </span>
+            <div className={styles.contactTile} title="Location">
+              <div className={styles.contactTileIconWrap}>
+                <MapPinIcon />
+              </div>
+              <div className={styles.contactTileTextWrap}>
+                <span className={styles.contactTileLabel}>Location</span>
+                <span className={styles.contactTileValue}>{location}</span>
+              </div>
+            </div>
           )}
 
           {websiteHref && (
@@ -129,23 +144,29 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
               href={websiteHref}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.contactChip}
+              className={styles.contactTile}
               title="Visit Website / Portfolio"
             >
-              {isGitHubWebsite ? <GitHubIcon /> : <GlobeIcon />}
-              <span>{websiteLabel}</span>
+              <div className={styles.contactTileIconWrap}>
+                {isGitHubWebsite ? <GitHubIcon /> : <GlobeIcon />}
+              </div>
+              <div className={styles.contactTileTextWrap}>
+                <span className={styles.contactTileLabel}>{isGitHubWebsite ? 'GitHub' : 'Website'}</span>
+                <span className={styles.contactTileValue}>{websiteLabel}</span>
+              </div>
             </a>
           )}
 
           {customFields.map((cf, idx) => {
             const fieldText = (cf.text as string) || (cf.value as string) || (cf.name as string) || '';
-            const fieldName = (cf.name as string) && (cf.value as string) ? (cf.name as string) : '';
-            const fieldValue = (cf.name as string) && (cf.value as string) ? (cf.value as string) : fieldText;
+            const fieldName = (cf.name as string) || '';
+            const fieldValue = (cf.value as string) || (cf.text as string) || fieldText;
             const fieldLink = formatHref(cf.link || cf.url);
             const fieldIconName = (cf.icon as string) || '';
 
             if (!fieldText && !fieldValue && !fieldName) return null;
             const iconElement = getCustomFieldIcon(fieldIconName, fieldText, fieldLink);
+            const displayLabel = fieldName || (cf.icon as string) || 'Profile Detail';
 
             if (fieldLink) {
               return (
@@ -154,33 +175,34 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
                   href={fieldLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={styles.contactChip}
+                  className={styles.contactTile}
+                  title={`${displayLabel}: ${fieldValue}`}
                 >
-                  {iconElement}
-                  {fieldName && fieldValue ? (
-                    <>
-                      <span className={styles.contactChipLabel}>{fieldName}:</span>
-                      <span>{fieldValue}</span>
-                    </>
-                  ) : (
-                    <span>{fieldValue || fieldText}</span>
-                  )}
+                  <div className={styles.contactTileIconWrap}>
+                    {iconElement}
+                  </div>
+                  <div className={styles.contactTileTextWrap}>
+                    <span className={styles.contactTileLabel}>{displayLabel}</span>
+                    <span className={styles.contactTileValue}>{fieldValue}</span>
+                  </div>
                 </a>
               );
             }
 
             return (
-              <span key={(cf.id as string) || `cf-${idx}`} className={styles.contactChip}>
-                {iconElement}
-                {fieldName && fieldValue ? (
-                  <>
-                    <span className={styles.contactChipLabel}>{fieldName}:</span>
-                    <span>{fieldValue}</span>
-                  </>
-                ) : (
-                  <span>{fieldValue || fieldText}</span>
-                )}
-              </span>
+              <div
+                key={(cf.id as string) || `cf-${idx}`}
+                className={styles.contactTile}
+                title={`${displayLabel}: ${fieldValue}`}
+              >
+                <div className={styles.contactTileIconWrap}>
+                  {iconElement}
+                </div>
+                <div className={styles.contactTileTextWrap}>
+                  <span className={styles.contactTileLabel}>{displayLabel}</span>
+                  <span className={styles.contactTileValue}>{fieldValue}</span>
+                </div>
+              </div>
             );
           })}
         </div>

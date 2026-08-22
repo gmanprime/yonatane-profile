@@ -631,14 +631,6 @@
   white-space: nowrap;
 }
 
-@media (min-width: 1024px) {
-  .contactChip {
-    width: 100%;
-    border-radius: 10px;
-    padding: 0.45rem 0.75rem;
-  }
-}
-
 .contactChip:hover {
   transform: translateY(-1.5px);
   color: #ffffff;
@@ -674,14 +666,6 @@
   width: 100%;
 }
 
-@media (min-width: 1024px) {
-  .heroActions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-  }
-}
-
 .primaryActionBtn {
   display: inline-flex;
   align-items: center;
@@ -697,15 +681,6 @@
   box-shadow: 0 4px 16px -3px color-mix(in srgb, var(--theme-primary, #6366f1) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   text-decoration: none;
-}
-
-@media (min-width: 1024px) {
-  .primaryActionBtn {
-    width: 100%;
-    justify-content: center;
-    box-sizing: border-box;
-    border-radius: 12px;
-  }
 }
 
 .primaryActionBtn:hover {
@@ -730,15 +705,6 @@
   box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: all 0.15s ease;
   text-decoration: none;
-}
-
-@media (min-width: 1024px) {
-  .secondaryActionBtn {
-    width: 100%;
-    justify-content: center;
-    box-sizing: border-box;
-    border-radius: 12px;
-  }
 }
 
 .secondaryActionBtn:hover {
@@ -1164,19 +1130,141 @@
   margin-bottom: 0;
 }
 
-.aboutContactChipsRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem;
+/* ============================================================
+   About Section - Beautified Responsive Contact Grid Form
+   ============================================================ */
+.aboutContactGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.aboutActionsRow {
+@media (max-width: 1240px) {
+  .aboutContactGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .aboutContactGrid {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+}
+
+.contactTile {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.85rem;
-  margin-top: 0.35rem;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 14px;
+  background: var(--theme-surface-glass, rgba(18, 20, 31, 0.6));
+  border: 1px solid var(--theme-surface-glass-border, rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--theme-text, #f8fafc);
+  text-decoration: none;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.contactTile:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--theme-accent, #38bdf8) 45%, transparent);
+  background: var(--theme-surface-glass-hover, rgba(26, 29, 45, 0.85));
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35), 0 0 12px color-mix(in srgb, var(--theme-accent, #38bdf8) 20%, transparent);
+}
+
+.contactTileIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--theme-primary, #6366f1) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-primary, #6366f1) 25%, transparent);
+  color: var(--theme-accent, #38bdf8);
+  flex-shrink: 0;
+}
+
+.contactTileIconWrap svg {
+  width: 16px;
+  height: 16px;
+}
+
+.contactTileTextWrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.contactTileLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--theme-muted, #94a3b8);
+  line-height: 1.15;
+  margin-bottom: 0.15rem;
+}
+
+.contactTileValue {
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--theme-text, #f8fafc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+/* ============================================================
+   Action CTAs - Responsive Ratio & Horizontal Fit
+   ============================================================ */
+.aboutActionsRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 260px));
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  justify-content: start;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .aboutActionsRow {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+}
+
+.aboutActionsRow .primaryActionBtn,
+.aboutActionsRow .secondaryActionBtn {
+  width: 100%;
+  max-width: 260px;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+  border-radius: 12px;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 0.84rem;
+}
+
+.aboutActionsRow .primaryActionBtn span,
+.aboutActionsRow .secondaryActionBtn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sectionHeader {
@@ -2150,6 +2238,7 @@
 .mobileDockActionBtn:focus-visible,
 .filterPill:focus-visible,
 .contactChip:focus-visible,
+.contactTile:focus-visible,
 .projectDemoLink:focus-visible,
 .projectCaseStudyBtn:focus-visible,
 .profileSocialCard:focus-visible,
@@ -2183,7 +2272,8 @@
   .secondaryActionBtn,
   .desktopNavPill,
   .filterPill,
-  .contactChip {
+  .contactChip,
+  .contactTile {
     transition: none !important;
     transform: none !important;
   }
