@@ -183,9 +183,31 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 ? `/p/${hash}/blog/${linkedArticle.id}`
                 : `/portfolio/${linkedArticle.id}`
               : null;
+            const hasCover = Boolean(linkedArticle?.coverImageUrl);
 
             return (
-              <div key={item.id} className={styles.projectCard}>
+              <div key={item.id} className={`${styles.projectCard} ${hasCover ? styles.projectCardWithCover : ''}`}>
+                {/* Linked Portfolio Case Study Cover Banner */}
+                {linkedArticle?.coverImageUrl && (
+                  <div className={styles.projectCoverImageWrapper}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={linkedArticle.coverImageUrl}
+                      alt={name}
+                      className={styles.projectCoverImage}
+                    />
+                    <div className={styles.projectCoverOverlay}>
+                      <span className={styles.caseStudyBadge}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                        <span>Case Study Attached</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className={styles.projectHeader}>
                   <div className={styles.projectTopRow}>
                     <h3 className={styles.projectName}>{name}</h3>
