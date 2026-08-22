@@ -224,7 +224,9 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
         <MobileNavDock
           sections={navSections}
           onOpenQR={handleOpenQR}
-          onDownloadResume={() => window.print()}
+          onDownloadResume={() => {
+            window.location.href = `/api/v1/public/profile/${hash && hash !== 'default' ? hash : 'default'}/pdf`;
+          }}
         />
 
         {/* Share / QR Modal */}

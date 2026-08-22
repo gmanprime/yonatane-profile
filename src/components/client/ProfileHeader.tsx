@@ -171,10 +171,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     .toUpperCase();
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://yonatanelias.dpdns.org';
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const pdfDownloadUrl = `/api/v1/public/profile/${hash && hash !== 'default' ? hash : 'default'}/pdf`;
 
   const blogPath = hash && hash !== 'default' ? `/p/${hash}/blog` : '/portfolio';
 
@@ -370,11 +367,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
         {/* Action CTAs */}
         <div className={styles.heroActions}>
-          <button
-            type="button"
-            onClick={handlePrint}
+          <a
+            href={pdfDownloadUrl}
+            download="Yonatan_Elias_Resume.pdf"
             className={styles.primaryActionBtn}
-            title="Download formatted PDF resume"
+            title="Download formatted official PDF resume"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -382,7 +379,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             <span>Download Resume PDF</span>
-          </button>
+          </a>
 
           <button
             type="button"

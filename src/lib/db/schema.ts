@@ -250,6 +250,19 @@ export const profileAnalyticsRelations = relations(profileAnalytics, ({ one }) =
 }));
 
 // ============================================================
+// APP SETTINGS & MASTER KEYSTORE
+// Secure database storage for integration keys & configuration
+// ============================================================
+export const appSettings = pgTable('app_settings', {
+  key: varchar('key', { length: 100 }).primaryKey(),
+  value: text('value'),
+  isSecret: boolean('is_secret').default(false).notNull(),
+  category: varchar('category', { length: 50 }).default('general').notNull(),
+  description: text('description'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
 // TYPE EXPORTS
 // ============================================================
 export type User = typeof users.$inferSelect;
@@ -278,3 +291,6 @@ export type NewPortfolioItem = typeof portfolioItems.$inferInsert;
 
 export type ProfileAnalytic = typeof profileAnalytics.$inferSelect;
 export type NewProfileAnalytic = typeof profileAnalytics.$inferInsert;
+
+export type AppSetting = typeof appSettings.$inferSelect;
+export type NewAppSetting = typeof appSettings.$inferInsert;

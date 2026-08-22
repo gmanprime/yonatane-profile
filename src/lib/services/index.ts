@@ -5,3 +5,5 @@ export * from './profile.service';
 export * from './theme.service';
 export * from './portfolio.service';
 export * from './analytics.service';
+export * from './rxresume.service';
+export * from './settings.service';

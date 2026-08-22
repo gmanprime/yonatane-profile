@@ -58,6 +58,16 @@ export default function AdminContentPage() {
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // RxResume Cloud Sync State
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState<boolean>(false);
+  const [rxApiKey, setRxApiKey] = useState<string>('');
+  const [rxBaseUrl, setRxBaseUrl] = useState<string>('https://rxresu.me');
+  const [rxResumes, setRxResumes] = useState<Array<{ id: string; title: string; slug: string; updatedAt?: string; isLocked?: boolean; isPublic?: boolean }>>([]);
+  const [isLoadingRxResumes, setIsLoadingRxResumes] = useState<boolean>(false);
+  const [isSyncingResumeId, setIsSyncingResumeId] = useState<string | null>(null);
+  const [rxSyncError, setRxSyncError] = useState<string | null>(null);
+  const [hasServerKey, setHasServerKey] = useState<boolean>(false);
+
   const showNotification = useCallback((msg: string, isError = false) => {
     if (isError) {
       setErrorMessage(msg);
@@ -83,6 +93,73 @@ export default function AdminContentPage() {
       setLoading(false);
     }
   }, []);
+
+  const fetchRxResumes = useCallback(async (customKey?: string, customBase?: string) => {
+    try {
+      setIsLoadingRxResumes(true);
+      setRxSyncError(null);
+
+      const params = new URLSearchParams();
+      const keyToUse = customKey !== undefined ? customKey : rxApiKey;
+      const baseToUse = customBase !== undefined ? customBase : rxBaseUrl;
+
+      if (keyToUse.trim()) params.set('apiKey', keyToUse.trim());
+      if (baseToUse.trim() && baseToUse !== 'https://rxresu.me') params.set('baseUrl', baseToUse.trim());
+
+      const url = `/api/v1/integrations/rxresume/sync${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch resumes from RxResume');
+      }
+
+      setRxResumes(data.resumes || []);
+      setHasServerKey(!!data.hasServerKey);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error fetching RxResume account';
+      setRxSyncError(msg);
+      setRxResumes([]);
+    } finally {
+      setIsLoadingRxResumes(false);
+    }
+  }, [rxApiKey, rxBaseUrl]);
+
+  const handleSyncResume = async (resume: { id: string; title: string }, setAsPrimary = false) => {
+    try {
+      setIsSyncingResumeId(resume.id);
+      setRxSyncError(null);
+
+      const res = await fetch('/api/v1/integrations/rxresume/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeId: resume.id,
+          apiKey: rxApiKey.trim() || undefined,
+          baseUrl: rxBaseUrl.trim() || undefined,
+          datasetName: `${resume.title || 'RxResume'} (Synced ${new Date().toLocaleDateString()})`,
+          setAsPrimary,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to sync resume');
+      }
+
+      setIsSyncModalOpen(false);
+      showNotification(`Successfully synced "${resume.title}" into Content Datasets!`);
+      await fetchDatasets();
+      if (data.dataset?.id) {
+        router.push(`/admin/content/${data.dataset.id}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error syncing resume';
+      setRxSyncError(msg);
+    } finally {
+      setIsSyncingResumeId(null);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -449,6 +526,20 @@ export default function AdminContentPage() {
         <div className={styles.actionButtons}>
           <button
             type="button"
+            className={styles.syncButton}
+            onClick={() => {
+              setIsSyncModalOpen(true);
+              fetchRxResumes();
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+            </svg>
+            Sync from RxResume
+          </button>
+
+          <button
+            type="button"
             className={styles.primaryButton}
             onClick={() => {
               setImportPreview(null);
@@ -461,7 +552,7 @@ export default function AdminContentPage() {
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            Import Resume (JSON / RxResume)
+            Import JSON File
           </button>
 
           <button
@@ -863,6 +954,161 @@ export default function AdminContentPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          SYNC FROM RXRESUME MODAL
+          ============================================================ */}
+      {isSyncModalOpen && (
+        <div className={styles.modalBackdrop} onClick={() => !isSyncingResumeId && setIsSyncModalOpen(false)}>
+          <div className={styles.modalDialog} style={{ maxWidth: '640px' }} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                  </svg>
+                  Sync from RxResume Cloud API
+                </h3>
+                <p className={styles.modalSubtitle}>
+                  Fetch and import any resume directly from your Reactive Resume account using OpenAPI.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.closeButton}
+                onClick={() => !isSyncingResumeId && setIsSyncModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {rxSyncError && <div className={styles.alertError}>⚠ {rxSyncError}</div>}
+
+            {/* API Key configuration section */}
+            <div className={styles.apiKeyContainer}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className={styles.inputLabel} style={{ margin: 0 }}>
+                  RxResume API Key
+                  {hasServerKey && (
+                    <span style={{ marginLeft: '0.5rem', color: '#34d399', fontSize: '0.75rem', fontWeight: 600 }}>
+                      ✓ Server Key Active
+                    </span>
+                  )}
+                </label>
+                <a
+                  href="https://rxresu.me/dashboard/settings/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '0.75rem', color: '#38bdf8', textDecoration: 'none' }}
+                >
+                  Get API Key ↗
+                </a>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="password"
+                  className={styles.textInput}
+                  style={{ flex: 1 }}
+                  placeholder={hasServerKey ? 'Using server RXRESUME_API_KEY (or enter custom key)' : 'Enter your x-api-key here'}
+                  value={rxApiKey}
+                  onChange={(e) => setRxApiKey(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  style={{ whiteSpace: 'nowrap', padding: '0.5rem 1rem' }}
+                  onClick={() => fetchRxResumes()}
+                  disabled={isLoadingRxResumes}
+                >
+                  {isLoadingRxResumes ? 'Connecting...' : 'Fetch Resumes'}
+                </button>
+              </div>
+            </div>
+
+            {/* Discovered Resumes List */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <span className={styles.inputLabel} style={{ margin: 0 }}>
+                  Account Resumes {rxResumes.length > 0 && `(${rxResumes.length})`}
+                </span>
+                {isLoadingRxResumes && (
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Loading from RxResume...</span>
+                )}
+              </div>
+
+              {isLoadingRxResumes ? (
+                <div style={{ textAlign: 'center', padding: '2.5rem', color: '#94a3b8' }}>
+                  <div className={dashboardStyles.loadingSpinner} style={{ margin: '0 auto 0.75rem' }} />
+                  Connecting to RxResume OpenAPI...
+                </div>
+              ) : rxResumes.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2.5rem 1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', color: '#94a3b8' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                    {hasServerKey || rxApiKey ? 'No resumes found in this RxResume account.' : 'Enter your RxResume API Key above and click "Fetch Resumes".'}
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.syncCardsList}>
+                  {rxResumes.map((resume) => (
+                    <div key={resume.id} className={styles.syncCard}>
+                      <div className={styles.syncCardInfo}>
+                        <div className={styles.syncCardTitle}>
+                          <span>{resume.title || 'Untitled Resume'}</span>
+                          {resume.isPublic && (
+                            <span className={`${styles.syncCardBadge} ${styles.syncCardBadgePublic}`}>Public</span>
+                          )}
+                          {resume.isLocked && (
+                            <span className={`${styles.syncCardBadge} ${styles.syncCardBadgeLocked}`}>Locked</span>
+                          )}
+                        </div>
+                        <div className={styles.syncCardMeta}>
+                          <span className={styles.syncCardSlug}>/{resume.slug || resume.id.slice(0, 8)}</span>
+                          {resume.updatedAt && (
+                            <span>Updated: {new Date(resume.updatedAt).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className={styles.primaryButton}
+                        style={{ padding: '0.5rem 0.9rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                        onClick={() => handleSyncResume(resume)}
+                        disabled={!!isSyncingResumeId}
+                      >
+                        {isSyncingResumeId === resume.id ? (
+                          'Importing...'
+                        ) : (
+                          <>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            <span>1-Click Import</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setIsSyncModalOpen(false)}
+                disabled={!!isSyncingResumeId}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
