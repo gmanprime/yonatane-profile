@@ -4,12 +4,12 @@
 
 .adminRoot {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background-color: #070a12;
   color: #f1f5f9;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -22,9 +22,7 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  height: 100%;
   z-index: 40;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -334,6 +332,9 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   background-color: #070a12;
 }
 
@@ -418,6 +419,11 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+}
+
+.fullWidthPage {
+  max-width: none;
+  padding: 0;
 }
 
 /* --------------------------------------------------------------------------

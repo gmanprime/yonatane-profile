@@ -252,6 +252,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </>
   );
 
+  const isPortfolioEditor = pathname.startsWith('/admin/portfolio/') && pathname !== '/admin/portfolio';
+
   return (
     <div className={`${styles.adminRoot} ${isMobileOpen ? styles.drawerOpen : ''}`}>
       {/* Desktop Sidebar */}
@@ -307,34 +309,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Desktop Sticky Header */}
-        <header className={styles.topHeader}>
-          <div className={styles.headerTitleGroup}>
-            <h1 className={styles.pageTitle}>{getPageHeading()}</h1>
-            <span className={styles.statusIndicator}>
-              <span className={styles.statusDot} />
-              Stealth Engine Active
-            </span>
-          </div>
+        {!isPortfolioEditor && (
+          <header className={styles.topHeader}>
+            <div className={styles.headerTitleGroup}>
+              <h1 className={styles.pageTitle}>{getPageHeading()}</h1>
+              <span className={styles.statusIndicator}>
+                <span className={styles.statusDot} />
+                Stealth Engine Active
+              </span>
+            </div>
 
-          <div className={styles.headerActions}>
-            <Link
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.publicViewButton}
-            >
-              <span>View Public Profile</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-            </Link>
-          </div>
-        </header>
+            <div className={styles.headerActions}>
+              <Link
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.publicViewButton}
+              >
+                <span>View Public Profile</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </Link>
+            </div>
+          </header>
+        )}
 
         {/* Page Content */}
-        <main className={styles.contentWrapper}>
+        <main className={`${styles.contentWrapper} ${isPortfolioEditor ? styles.fullWidthPage : ''}`}>
           {children}
         </main>
       </div>

@@ -44,13 +44,26 @@ export const ProfileRenderer: React.FC<ProfileRendererProps> = ({
   const portfolioArticleMap = useMemo(() => {
     const map: Record<string, LinkedPortfolioArticle> = {};
     for (const art of portfolioArticles) {
-      if (art.projectItemId) {
-        map[art.projectItemId] = {
-          id: art.id,
-          title: art.title,
-          subtitle: art.subtitle,
-          coverImageUrl: art.coverImageUrl,
-        };
+      const summary: LinkedPortfolioArticle = {
+        id: art.id,
+        title: art.title,
+        subtitle: art.subtitle,
+        coverImageUrl: art.coverImageUrl,
+      };
+
+      // 1. Forward junction links (many-to-many)
+      const links = (art as Record<string, unknown>).articleLinks as Array<{ sectionItemId: string; isPrimary?: boolean }> | undefined;
+      if (Array.isArray(links)) {
+        for (const l of links) {
+          if (l.sectionItemId && (!map[l.sectionItemId] || l.isPrimary)) {
+            map[l.sectionItemId] = summary;
+          }
+        }
+      }
+
+      // 2. Backward compatibility (direct FK)
+      if (art.projectItemId && !map[art.projectItemId]) {
+        map[art.projectItemId] = summary;
       }
     }
     return map;

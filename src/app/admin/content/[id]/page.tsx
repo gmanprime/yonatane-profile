@@ -4,6 +4,7 @@ import React, { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './editor.module.css';
 import dashboardStyles from '../../dashboard.module.css';
+import { ArticleLinker } from '@/components/admin/content/ArticleLinker';
 
 interface SectionItemData {
   id?: string;
@@ -1397,6 +1398,14 @@ export default function DatasetEditorPage({ params }: { params: Promise<{ id: st
                                           }
                                         />
                                       </div>
+                                      {item.id && (
+                                        <div className={styles.fieldFull}>
+                                          <ArticleLinker
+                                            sectionItemId={item.id}
+                                            itemName={(data.name as string) || 'Project'}
+                                          />
+                                        </div>
+                                      )}
                                     </div>
                                   )}
 
@@ -1687,6 +1696,14 @@ export default function DatasetEditorPage({ params }: { params: Promise<{ id: st
                                           }
                                         />
                                       </div>
+                                      {item.id && (
+                                        <div className={styles.fieldFull}>
+                                          <ArticleLinker
+                                            sectionItemId={item.id}
+                                            itemName={(data.title as string) || (data.name as string) || 'Custom Item'}
+                                          />
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>

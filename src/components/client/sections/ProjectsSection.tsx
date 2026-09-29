@@ -227,7 +227,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         </div>
       ) : (
         /* Projects Multi-View Grid */
-        <div className={containerClass}>
+        <div key={viewMode} className={`${containerClass} ${styles.projectsContainerAnimated}`}>
           {filteredItems.map((item) => {
             const data = item.data as ProjectItemData;
             const name = data.name || data.title || 'Untitled Project';

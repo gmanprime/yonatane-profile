@@ -39,12 +39,20 @@
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--theme-accent, #38bdf8) 12%, transparent);
-  transition: all 0.15s ease;
+  border: 1px solid color-mix(in srgb, var(--theme-accent, #38bdf8) 25%, transparent);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .backHomeLink:hover {
   background: var(--theme-accent, #38bdf8);
   color: #090a0f;
+  border-color: transparent;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-accent, #38bdf8) 35%, transparent);
+}
+
+.backHomeLink:active {
+  transform: scale(0.96);
 }
 
 .galleryTitle {
@@ -106,12 +114,12 @@
   color: var(--theme-text, #f8fafc);
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .searchInput:focus {
   border-color: var(--theme-primary, #6366f1);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary, #6366f1) 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary, #6366f1) 25%, transparent);
 }
 
 .tagsFilterList {
@@ -129,18 +137,26 @@
   background: var(--theme-surface, #12141f);
   color: var(--theme-muted, #94a3b8);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tagFilterBtn:hover {
   color: var(--theme-text, #f8fafc);
   border-color: var(--theme-accent, #38bdf8);
+  transform: translateY(-1.5px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.tagFilterBtn:active {
+  transform: scale(0.96);
 }
 
 .tagFilterBtnActive {
-  background: var(--theme-primary, #6366f1);
-  border-color: var(--theme-primary, #6366f1);
+  background: linear-gradient(135deg, var(--theme-primary, #6366f1), var(--theme-secondary, #8b5cf6));
+  border-color: transparent;
   color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px -2px color-mix(in srgb, var(--theme-primary, #6366f1) 50%, transparent);
 }
 
 /* Article Cards Grid */
@@ -170,15 +186,16 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
   color: inherit;
+  position: relative;
 }
 
 .articleCard:hover {
   border-color: color-mix(in srgb, var(--theme-primary, #6366f1) 60%, var(--theme-border, #1e293b));
-  transform: translateY(-3px);
-  box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.6);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.65), 0 0 16px color-mix(in srgb, var(--theme-primary, #6366f1) 25%, transparent);
 }
 
 .cardCoverWrapper {
@@ -535,8 +552,20 @@
   .backHomeLink,
   .tagFilterBtn,
   .resourceBtn,
-  .shareBtn {
+  .shareBtn,
+  .projectCalloutLink,
+  .tocLink {
     transition: none !important;
+    transform: none !important;
+  }
+
+  .articleCard:hover,
+  .articleCard:hover .cardCoverImg,
+  .backHomeLink:hover,
+  .tagFilterBtn:hover,
+  .resourceBtn:hover,
+  .shareBtn:hover,
+  .projectCalloutLink:hover {
     transform: none !important;
   }
 }

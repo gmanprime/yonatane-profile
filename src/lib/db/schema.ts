@@ -173,6 +173,23 @@ export const portfolioItems = pgTable('portfolio_items', {
 });
 
 // ============================================================
+// PROJECT ↔ ARTICLE LINKS (Junction Table)
+// Many-to-many forward-linking between section_items and portfolio_items
+// ============================================================
+export const projectArticleLinks = pgTable('project_article_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sectionItemId: uuid('section_item_id').notNull().references(() => sectionItems.id, { onDelete: 'cascade' }),
+  portfolioItemId: uuid('portfolio_item_id').notNull().references(() => portfolioItems.id, { onDelete: 'cascade' }),
+  isPrimary: boolean('is_primary').default(false).notNull(),
+  displayOrder: integer('display_order').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('pal_unique_link_idx').on(table.sectionItemId, table.portfolioItemId),
+  index('pal_section_item_idx').on(table.sectionItemId),
+  index('pal_portfolio_item_idx').on(table.portfolioItemId),
+]);
+
+// ============================================================
 // PROFILE ANALYTICS
 // Visitor tracking for stealth profile links
 // ============================================================
@@ -218,8 +235,9 @@ export const sectionsRelations = relations(sections, ({ one, many }) => ({
   profileSections: many(profileSections),
 }));
 
-export const sectionItemsRelations = relations(sectionItems, ({ one }) => ({
+export const sectionItemsRelations = relations(sectionItems, ({ one, many }) => ({
   section: one(sections, { fields: [sectionItems.sectionId], references: [sections.id] }),
+  articleLinks: many(projectArticleLinks),
 }));
 
 export const themesRelations = relations(themes, ({ one, many }) => ({
@@ -240,9 +258,15 @@ export const profileSectionsRelations = relations(profileSections, ({ one }) => 
   section: one(sections, { fields: [profileSections.sectionId], references: [sections.id] }),
 }));
 
-export const portfolioItemsRelations = relations(portfolioItems, ({ one }) => ({
+export const portfolioItemsRelations = relations(portfolioItems, ({ one, many }) => ({
   user: one(users, { fields: [portfolioItems.userId], references: [users.id] }),
   projectItem: one(sectionItems, { fields: [portfolioItems.projectItemId], references: [sectionItems.id] }),
+  articleLinks: many(projectArticleLinks),
+}));
+
+export const projectArticleLinksRelations = relations(projectArticleLinks, ({ one }) => ({
+  sectionItem: one(sectionItems, { fields: [projectArticleLinks.sectionItemId], references: [sectionItems.id] }),
+  portfolioItem: one(portfolioItems, { fields: [projectArticleLinks.portfolioItemId], references: [portfolioItems.id] }),
 }));
 
 export const profileAnalyticsRelations = relations(profileAnalytics, ({ one }) => ({
@@ -294,3 +318,6 @@ export type NewProfileAnalytic = typeof profileAnalytics.$inferInsert;
 
 export type AppSetting = typeof appSettings.$inferSelect;
 export type NewAppSetting = typeof appSettings.$inferInsert;
+
+export type ProjectArticleLink = typeof projectArticleLinks.$inferSelect;
+export type NewProjectArticleLink = typeof projectArticleLinks.$inferInsert;

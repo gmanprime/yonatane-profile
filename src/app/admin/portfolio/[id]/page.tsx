@@ -54,6 +54,7 @@ export default function ArticleEditorPage({
 
   // View Mode & Modals
   const [viewMode, setViewMode] = useState<EditorViewMode>('split');
+  const [editorTab, setEditorTab] = useState<'properties' | 'editor'>('editor');
   const [showFullPreview, setShowFullPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -271,6 +272,23 @@ export default function ArticleEditorPage({
           </div>
         </div>
 
+        <div className={styles.tabSwitcher}>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${editorTab === 'properties' ? styles.tabBtnActive : ''}`}
+            onClick={() => setEditorTab('properties')}
+          >
+            Properties
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${editorTab === 'editor' ? styles.tabBtnActive : ''}`}
+            onClick={() => setEditorTab('editor')}
+          >
+            Content Editor
+          </button>
+        </div>
+
         <div className={styles.topRight}>
           <button
             type="button"
@@ -299,132 +317,132 @@ export default function ArticleEditorPage({
       </header>
 
       {/* Main Studio Workspace Grid */}
-      <div className={styles.workspaceLayout}>
-        {/* Left Metadata & Asset Sidebar */}
-        <aside className={styles.metaSidebar}>
-          {/* Article Core Metadata Card */}
-          <div className={styles.metaSection}>
-            <h3 className={styles.metaSectionTitle}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-              <span>Article Details</span>
-            </h3>
+      {editorTab === 'properties' ? (
+        <div className={styles.propertiesView}>
+          <div className={styles.propertiesGrid}>
+            {/* Article Core Metadata Card */}
+            <div className={styles.metaSection}>
+              <h3 className={styles.metaSectionTitle}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span>Article Details</span>
+              </h3>
 
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Article Title *</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  markDirty();
-                }}
-                placeholder="e.g. Distributed System Architecture & Caching"
-                className={styles.input}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Subtitle / Summary</label>
-              <textarea
-                value={subtitle}
-                onChange={(e) => {
-                  setSubtitle(e.target.value);
-                  markDirty();
-                }}
-                placeholder="A concise summary or hook for this technical article..."
-                className={styles.textarea}
-              />
-            </div>
-
-            {/* Publication State Switch */}
-            <div className={styles.statusSwitchRow}>
-              <div className={styles.statusInfo}>
-                <span className={styles.statusLabel}>
-                  {status === 'published' ? 'Published' : 'Draft Mode'}
-                </span>
-                <span className={styles.statusDesc}>
-                  {status === 'published' ? 'Visible to portfolio visitors' : 'Private and unlisted'}
-                </span>
-              </div>
-              <label className={styles.toggleSwitch}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Article Title *</label>
                 <input
-                  type="checkbox"
-                  checked={status === 'published'}
+                  type="text"
+                  value={title}
                   onChange={(e) => {
-                    const newStatus = e.target.checked ? 'published' : 'draft';
-                    setStatus(newStatus);
+                    setTitle(e.target.value);
                     markDirty();
                   }}
-                />
-                <span className={styles.slider} />
-              </label>
-            </div>
-
-            {status === 'published' && (
-              <div className={styles.formGroup} style={{ marginTop: '0.85rem' }}>
-                <label className={styles.label}>Publication Date</label>
-                <input
-                  type="date"
-                  value={publishedAt || ''}
-                  onChange={(e) => {
-                    setPublishedAt(e.target.value);
-                    markDirty();
-                  }}
+                  placeholder="e.g. Distributed System Architecture & Caching"
                   className={styles.input}
                 />
               </div>
-            )}
-          </div>
 
-          {/* Cover Image Manager */}
-          <div className={styles.metaSection}>
-            <CoverImageManager
-              coverImageUrl={coverImageUrl}
-              onChange={(url) => {
-                setCoverImageUrl(url);
-                markDirty();
-              }}
-            />
-          </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Subtitle / Summary</label>
+                <textarea
+                  value={subtitle}
+                  onChange={(e) => {
+                    setSubtitle(e.target.value);
+                    markDirty();
+                  }}
+                  placeholder="A concise summary or hook for this technical article..."
+                  className={styles.textarea}
+                />
+              </div>
 
-          {/* Tags Manager */}
-          <div className={styles.metaSection}>
-            <TagManager
-              tags={tags}
-              onChange={(newTags) => {
-                setTags(newTags);
-                markDirty();
-              }}
-            />
-          </div>
+              {/* Publication State Switch */}
+              <div className={styles.statusSwitchRow}>
+                <div className={styles.statusInfo}>
+                  <span className={styles.statusLabel}>
+                    {status === 'published' ? 'Published' : 'Draft Mode'}
+                  </span>
+                  <span className={styles.statusDesc}>
+                    {status === 'published' ? 'Visible to portfolio visitors' : 'Private and unlisted'}
+                  </span>
+                </div>
+                <label className={styles.toggleSwitch}>
+                  <input
+                    type="checkbox"
+                    checked={status === 'published'}
+                    onChange={(e) => {
+                      const newStatus = e.target.checked ? 'published' : 'draft';
+                      setStatus(newStatus);
+                      markDirty();
+                    }}
+                  />
+                  <span className={styles.slider} />
+                </label>
+              </div>
 
-          {/* Project Linker */}
-          <div className={styles.metaSection}>
-            <ProjectLinker
-              selectedProjectItemId={projectItemId}
-              onChange={(id) => {
-                setProjectItemId(id);
-                markDirty();
-              }}
-            />
-          </div>
+              {status === 'published' && (
+                <div className={styles.formGroup} style={{ marginTop: '0.85rem' }}>
+                  <label className={styles.label}>Publication Date</label>
+                  <input
+                    type="date"
+                    value={publishedAt || ''}
+                    onChange={(e) => {
+                      setPublishedAt(e.target.value);
+                      markDirty();
+                    }}
+                    className={styles.input}
+                  />
+                </div>
+              )}
+            </div>
 
-          {/* External Links */}
-          <div className={styles.metaSection}>
-            <ExternalLinksManager
-              links={links}
-              onChange={(newLinks) => {
-                setLinks(newLinks);
-                markDirty();
-              }}
-            />
-          </div>
-        </aside>
+            {/* Cover Image Manager */}
+            <div className={styles.metaSection}>
+              <CoverImageManager
+                coverImageUrl={coverImageUrl}
+                onChange={(url) => {
+                  setCoverImageUrl(url);
+                  markDirty();
+                }}
+              />
+            </div>
 
-        {/* Center/Right Content Workspace */}
+            {/* Tags Manager */}
+            <div className={styles.metaSection}>
+              <TagManager
+                tags={tags}
+                onChange={(newTags) => {
+                  setTags(newTags);
+                  markDirty();
+                }}
+              />
+            </div>
+
+            {/* Project Linker */}
+            <div className={styles.metaSection}>
+              <ProjectLinker
+                selectedProjectItemId={projectItemId}
+                onChange={(id) => {
+                  setProjectItemId(id);
+                  markDirty();
+                }}
+              />
+            </div>
+
+            {/* External Links */}
+            <div className={styles.metaSection}>
+              <ExternalLinksManager
+                links={links}
+                onChange={(newLinks) => {
+                  setLinks(newLinks);
+                  markDirty();
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
         <main className={styles.contentArea}>
           {/* Markdown Formatting Toolbar & Telemetry Bar */}
           <MarkdownToolbar
@@ -476,7 +494,7 @@ export default function ArticleEditorPage({
             )}
           </div>
         </main>
-      </div>
+      )}
 
       {/* Sticky Bottom Action Footer */}
       <footer className={styles.actionFooter}>

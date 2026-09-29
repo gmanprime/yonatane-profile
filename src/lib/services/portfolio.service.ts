@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { portfolioItems, contentDatasets, sections, type PortfolioItem, type SectionItem } from '@/lib/db/schema';
+import { portfolioItems, contentDatasets, sections, projectArticleLinks, type PortfolioItem, type SectionItem, type ProjectArticleLink } from '@/lib/db/schema';
 import {
   type CreatePortfolioItemInput,
   type UpdatePortfolioItemInput,
@@ -150,33 +150,31 @@ export class PortfolioService {
 
   static async getPublishedPortfolioByProjectItemIds(
     projectItemIds: string[]
-  ): Promise<Record<string, { id: string; title: string; subtitle: string | null; coverImageUrl: string | null }>> {
+  ): Promise<Record<string, Array<{ id: string; title: string; subtitle: string | null; coverImageUrl: string | null }>>> {
     if (projectItemIds.length === 0) return {};
 
     try {
-      const items = await db.query.portfolioItems.findMany({
-        where: and(
-          eq(portfolioItems.status, 'published'),
-          inArray(portfolioItems.projectItemId, projectItemIds)
-        ),
-        columns: {
-          id: true,
-          title: true,
-          subtitle: true,
-          coverImageUrl: true,
-          projectItemId: true,
+      const links = await db.query.projectArticleLinks.findMany({
+        where: inArray(projectArticleLinks.sectionItemId, projectItemIds),
+        with: {
+          portfolioItem: true,
         },
+        orderBy: [desc(projectArticleLinks.displayOrder), desc(projectArticleLinks.createdAt)],
       });
 
-      const map: Record<string, { id: string; title: string; subtitle: string | null; coverImageUrl: string | null }> = {};
-      for (const item of items) {
-        if (item.projectItemId) {
-          map[item.projectItemId] = {
-            id: item.id,
-            title: item.title,
-            subtitle: item.subtitle,
-            coverImageUrl: item.coverImageUrl,
-          };
+      const map: Record<string, Array<{ id: string; title: string; subtitle: string | null; coverImageUrl: string | null }>> = {};
+      
+      for (const link of links) {
+        if (link.portfolioItem && link.portfolioItem.status === 'published') {
+          if (!map[link.sectionItemId]) {
+            map[link.sectionItemId] = [];
+          }
+          map[link.sectionItemId].push({
+            id: link.portfolioItem.id,
+            title: link.portfolioItem.title,
+            subtitle: link.portfolioItem.subtitle,
+            coverImageUrl: link.portfolioItem.coverImageUrl,
+          });
         }
       }
 
@@ -185,6 +183,142 @@ export class PortfolioService {
       console.warn('Database offline or unreachable while fetching portfolio links by project item IDs:', error);
       return {};
     }
+  }
+
+  // --- Junction Table Methods ---
+
+  static async getArticlesForSectionItem(sectionItemId: string) {
+    const links = await db.query.projectArticleLinks.findMany({
+      where: eq(projectArticleLinks.sectionItemId, sectionItemId),
+      with: {
+        portfolioItem: true,
+      },
+      orderBy: [desc(projectArticleLinks.displayOrder), desc(projectArticleLinks.createdAt)],
+    });
+
+    return links.map(link => ({
+      linkId: link.id,
+      portfolioItemId: link.portfolioItemId,
+      title: link.portfolioItem?.title,
+      subtitle: link.portfolioItem?.subtitle,
+      coverImageUrl: link.portfolioItem?.coverImageUrl,
+      status: link.portfolioItem?.status,
+      isPrimary: link.isPrimary,
+      displayOrder: link.displayOrder,
+    }));
+  }
+
+  static async getSectionItemsForArticle(portfolioItemId: string) {
+    const links = await db.query.projectArticleLinks.findMany({
+      where: eq(projectArticleLinks.portfolioItemId, portfolioItemId),
+      with: {
+        sectionItem: true,
+      },
+      orderBy: [desc(projectArticleLinks.displayOrder), desc(projectArticleLinks.createdAt)],
+    });
+
+    return links.map(link => ({
+      linkId: link.id,
+      sectionItemId: link.sectionItemId,
+      isPrimary: link.isPrimary,
+      displayOrder: link.displayOrder,
+      sectionItem: link.sectionItem,
+    }));
+  }
+
+  static async linkArticleToProject(sectionItemId: string, portfolioItemId: string, isPrimary = false) {
+    try {
+      const [link] = await db
+        .insert(projectArticleLinks)
+        .values({
+          sectionItemId,
+          portfolioItemId,
+          isPrimary,
+        })
+        .returning();
+
+      if (isPrimary) {
+        await db.update(portfolioItems)
+          .set({ projectItemId: sectionItemId })
+          .where(eq(portfolioItems.id, portfolioItemId));
+      }
+
+      return link;
+    } catch (error: any) {
+      // If it's a unique constraint violation, return existing link
+      if (error.code === '23505') {
+        const existing = await db.query.projectArticleLinks.findFirst({
+          where: and(
+            eq(projectArticleLinks.sectionItemId, sectionItemId),
+            eq(projectArticleLinks.portfolioItemId, portfolioItemId)
+          )
+        });
+        
+        if (existing) {
+           if (isPrimary && !existing.isPrimary) {
+             await this.updateArticleLink(existing.id, { isPrimary: true });
+             await db.update(portfolioItems)
+               .set({ projectItemId: sectionItemId })
+               .where(eq(portfolioItems.id, portfolioItemId));
+             return { ...existing, isPrimary: true };
+           }
+           return existing;
+        }
+      }
+      throw error;
+    }
+  }
+
+  static async unlinkArticleFromProject(sectionItemId: string, portfolioItemId: string) {
+    const [deleted] = await db
+      .delete(projectArticleLinks)
+      .where(
+        and(
+          eq(projectArticleLinks.sectionItemId, sectionItemId),
+          eq(projectArticleLinks.portfolioItemId, portfolioItemId)
+        )
+      )
+      .returning();
+
+    if (deleted && deleted.isPrimary) {
+      await db.update(portfolioItems)
+        .set({ projectItemId: null })
+        .where(
+          and(
+            eq(portfolioItems.id, portfolioItemId),
+            eq(portfolioItems.projectItemId, sectionItemId)
+          )
+        );
+    }
+
+    return deleted;
+  }
+
+  static async updateArticleLink(linkId: string, updates: { isPrimary?: boolean; displayOrder?: number }) {
+    const [updated] = await db
+      .update(projectArticleLinks)
+      .set(updates)
+      .where(eq(projectArticleLinks.id, linkId))
+      .returning();
+
+    if (updated && updates.isPrimary !== undefined) {
+      if (updates.isPrimary) {
+        await db.update(portfolioItems)
+          .set({ projectItemId: updated.sectionItemId })
+          .where(eq(portfolioItems.id, updated.portfolioItemId));
+      } else {
+        await db.update(portfolioItems)
+          .set({ projectItemId: null })
+          .where(
+            and(
+              eq(portfolioItems.id, updated.portfolioItemId),
+              eq(portfolioItems.projectItemId, updated.sectionItemId)
+            )
+          );
+      }
+    }
+
+    return updated;
   }
 
   static async createPortfolioItem(userId: string, input: CreatePortfolioItemInput): Promise<PortfolioItem> {
