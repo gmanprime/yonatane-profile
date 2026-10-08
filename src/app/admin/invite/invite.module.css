@@ -1,8 +1,8 @@
 /* ==========================================================================
-   Admin Authentication Portal Styles (Obsidian Theme)
+   Admin Invitation Portal Styles (Obsidian Theme)
    ========================================================================== */
 
-.loginRoot {
+.inviteRoot {
   min-height: 100vh;
   width: 100%;
   display: flex;
@@ -20,16 +20,16 @@
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
   top: -100px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
 }
 
-.loginCard {
+.inviteCard {
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   background: linear-gradient(180deg, rgba(20, 28, 48, 0.85) 0%, rgba(13, 19, 34, 0.95) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
@@ -62,14 +62,14 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
   font-weight: 800;
   font-size: 1.35rem;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
   margin-bottom: 1.25rem;
 }
 
@@ -113,59 +113,34 @@
   gap: 0.6rem;
 }
 
-/* Passkey Buttons */
-.authButtonGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+/* Invite Info Banner */
+.inviteInfoBanner {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
   margin-bottom: 1.5rem;
-}
-
-.passkeyButton {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.8rem 1rem;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: 9px;
-  color: #93c5fd;
-  font-size: 0.9rem;
+  justify-content: space-between;
+}
+
+.inviteEmailText {
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
+  color: #f1f5f9;
+  font-size: 0.88rem;
 }
 
-.passkeyButton:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 0.16);
-  border-color: rgba(59, 130, 246, 0.45);
-  color: #bfdbfe;
-  transform: translateY(-1px);
-}
-
-/* Divider */
-.divider {
-  display: flex;
-  align-items: center;
-  margin: 1.5rem 0;
-  color: #64748b;
-  font-size: 0.75rem;
+.roleBadge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #c7d2fe;
+  border-radius: 1rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.dividerText {
-  padding: 0 0.85rem;
+  text-transform: capitalize;
 }
 
 /* Form inputs */
@@ -206,9 +181,15 @@
 }
 
 .input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
   background: #0d1424;
+}
+
+.inputDisabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .inputError {
@@ -238,6 +219,51 @@
   color: #f87171;
 }
 
+/* Password Strength Indicator */
+.strengthMeter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.strengthBars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+  height: 4px;
+}
+
+.strengthSegment {
+  height: 100%;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background-color 0.2s ease;
+}
+
+.strengthSegmentActiveWeak {
+  background: #ef4444;
+}
+
+.strengthSegmentActiveMedium {
+  background: #f59e0b;
+}
+
+.strengthSegmentActiveStrong {
+  background: #10b981;
+}
+
+.strengthSegmentActiveVeryStrong {
+  background: #06b6d4;
+}
+
+.strengthLabel {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: flex;
+  justify-content: space-between;
+}
+
 /* Submit Button */
 .submitButton {
   display: flex;
@@ -247,7 +273,7 @@
   width: 100%;
   padding: 0.85rem 1rem;
   margin-top: 0.5rem;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   color: #ffffff;
@@ -255,123 +281,17 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s ease;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
 }
 
 .submitButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
   transform: translateY(-1px);
 }
 
 .submitButton:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Emergency Master Access Section */
-.emergencyContainer {
-  margin-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 1.25rem;
-}
-
-.emergencyToggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: transparent;
-  border: none;
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  transition: color 0.15s ease;
-}
-
-.emergencyToggle:hover {
-  color: #94a3b8;
-}
-
-.emergencyToggleLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.emergencyPanel {
-  margin-top: 0.85rem;
-  padding: 1rem;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  animation: fadeIn 0.25s ease-out;
-}
-
-.emergencyHint {
-  font-size: 0.74rem;
-  color: #94a3b8;
-  margin: 0 0 0.75rem 0;
-  line-height: 1.4;
-}
-
-.emergencyForm {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.totpInputGroup {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.totpInput {
-  flex: 1;
-  background: #080c16;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
-  padding: 0.55rem 0.75rem;
-  color: #f8fafc;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 1rem;
-  letter-spacing: 0.2em;
-  text-align: center;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-
-.totpInput:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-.emergencySubmitBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.55rem 0.85rem;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #93c5fd;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.emergencySubmitBtn:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 0.25);
-  border-color: rgba(59, 130, 246, 0.5);
-  color: #ffffff;
-}
-
-.emergencySubmitBtn:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -389,6 +309,62 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Error State Container */
+.errorStateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  padding: 1.5rem 0;
+}
+
+.errorIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+}
+
+.errorTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.errorDescription {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.actionButton:hover {
+  background: #334155;
+  color: #ffffff;
 }
 
 /* Card Footer */
@@ -410,5 +386,5 @@
 }
 
 .backLink:hover {
-  color: #60a5fa;
+  color: #a5b4fc;
 }

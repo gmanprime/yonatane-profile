@@ -30,7 +30,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Fetch current authenticated user info
   useEffect(() => {
-    if (pathname === '/admin/login') return;
+    if (pathname === '/admin/login' || pathname === '/admin/invite') return;
 
     let isMounted = true;
     async function fetchUser() {
@@ -75,8 +75,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  // If visiting login screen, render without the admin navigation shell
-  if (pathname === '/admin/login') {
+  // If visiting login or invite screen, render without the admin navigation shell
+  if (pathname === '/admin/login' || pathname === '/admin/invite') {
     return <>{children}</>;
   }
 

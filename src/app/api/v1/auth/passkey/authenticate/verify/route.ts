@@ -1,0 +1,118 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { passkeyAssertionSchema } from '@/lib/validators/auth.validator';
+import { AuthService } from '@/lib/services/auth.service';
+import { db } from '@/lib/db';
+import { users, passkeys } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+import { getErrorMessage } from '@/lib/utils/error';
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const parsed = passkeyAssertionSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid passkey assertion data', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { credential } = parsed.data;
+
+    // 1. Look up stored passkey by credentialId
+    const [storedPasskey] = await db
+      .select()
+      .from(passkeys)
+      .where(eq(passkeys.credentialId, credential.id))
+      .limit(1);
+
+    if (!storedPasskey) {
+      return NextResponse.json(
+        { error: 'Passkey credential not recognized' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Look up the corresponding user
+    const [dbUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, storedPasskey.userId))
+      .limit(1);
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { error: 'User associated with passkey not found' },
+        { status: 404 }
+      );
+    }
+
+    // 3. Update passkey usage metadata
+    await db
+      .update(passkeys)
+      .set({
+        lastUsedAt: new Date(),
+        counter: (storedPasskey.counter || 0) + 1,
+      })
+      .where(eq(passkeys.id, storedPasskey.id));
+
+    // 4. Create active session on SSR client cookies via Supabase Admin magiclink
+    const admin = createAdminClient();
+    let session = null;
+
+    try {
+      const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: dbUser.email,
+      });
+
+      if (!linkError && linkData?.properties?.hashed_token) {
+        const supabase = await createClient();
+        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: linkData.properties.hashed_token,
+          type: 'magiclink',
+        });
+
+        if (!verifyError && verifyData) {
+          session = verifyData.session;
+          if (verifyData.user) {
+            await AuthService.syncUser(verifyData.user);
+          }
+        }
+      }
+    } catch (sessionErr) {
+      console.warn('Passkey authentication session creation warning:', sessionErr);
+    }
+
+    // 5. Audit log
+    await AuthService.logSecurityEvent(
+      dbUser.id,
+      'passkey_login',
+      req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip'),
+      req.headers.get('user-agent'),
+      {
+        credentialId: storedPasskey.credentialId,
+        deviceName: storedPasskey.deviceName,
+      }
+    );
+
+    return NextResponse.json({
+      success: true,
+      verified: true,
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        displayName: dbUser.displayName,
+      },
+      session,
+    });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: getErrorMessage(error, 'Passkey authentication failed') },
+      { status: 500 }
+    );
+  }
+}

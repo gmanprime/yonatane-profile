@@ -221,6 +221,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   profiles: many(profiles),
   themes: many(themes),
   portfolioItems: many(portfolioItems),
+  passkeys: many(passkeys),
+  invitesCreated: many(userInvites),
+  securityEvents: many(securityEvents),
 }));
 
 export const contentDatasetsRelations = relations(contentDatasets, ({ one, many }) => ({
@@ -287,6 +290,70 @@ export const appSettings = pgTable('app_settings', {
 });
 
 // ============================================================
+// USER INVITES (Admin-gated signup tokens)
+// ============================================================
+export const userInvites = pgTable('user_invites', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull(),
+  token: text('token').notNull().unique(),
+  role: varchar('role', { length: 50 }).default('admin').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('invites_token_idx').on(table.token),
+  index('invites_email_idx').on(table.email),
+]);
+
+// ============================================================
+// PASSKEYS (WebAuthn credential storage)
+// ============================================================
+export const passkeys = pgTable('passkeys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  credentialId: text('credential_id').notNull().unique(),
+  publicKey: text('public_key').notNull(),
+  counter: integer('counter').default(0).notNull(),
+  transports: text('transports'), // JSON array of transport strings
+  deviceName: varchar('device_name', { length: 255 }),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('passkeys_user_idx').on(table.userId),
+  index('passkeys_credential_idx').on(table.credentialId),
+]);
+
+// ============================================================
+// SECURITY AUDIT LOG
+// ============================================================
+export const securityEvents = pgTable('security_events', {
+  id: serial('id').primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  eventType: varchar('event_type', { length: 50 }).notNull(), // login, logout, password_change, invite_created, totp_bypass, passkey_registered, etc.
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  metadata: jsonb('metadata'), // Additional context (e.g., invite token, device info)
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('security_events_user_idx').on(table.userId),
+  index('security_events_type_idx').on(table.eventType),
+  index('security_events_created_idx').on(table.createdAt),
+]);
+
+export const userInvitesRelations = relations(userInvites, ({ one }) => ({
+  createdBy: one(users, { fields: [userInvites.createdById], references: [users.id] }),
+}));
+
+export const passkeysRelations = relations(passkeys, ({ one }) => ({
+  user: one(users, { fields: [passkeys.userId], references: [users.id] }),
+}));
+
+export const securityEventsRelations = relations(securityEvents, ({ one }) => ({
+  user: one(users, { fields: [securityEvents.userId], references: [users.id] }),
+}));
+
+// ============================================================
 // TYPE EXPORTS
 // ============================================================
 export type User = typeof users.$inferSelect;
@@ -321,3 +388,12 @@ export type NewAppSetting = typeof appSettings.$inferInsert;
 
 export type ProjectArticleLink = typeof projectArticleLinks.$inferSelect;
 export type NewProjectArticleLink = typeof projectArticleLinks.$inferInsert;
+
+export type UserInvite = typeof userInvites.$inferSelect;
+export type NewUserInvite = typeof userInvites.$inferInsert;
+
+export type Passkey = typeof passkeys.$inferSelect;
+export type NewPasskey = typeof passkeys.$inferInsert;
+
+export type SecurityEvent = typeof securityEvents.$inferSelect;
+export type NewSecurityEvent = typeof securityEvents.$inferInsert;

@@ -1,35 +1,65 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './login.module.css';
 
-const ALLOWED_ADMIN_EMAILS = ['yonatane504@gmail.com', 'yonatan@yonatanelias.dpdns.org'];
+// Helper: Convert ArrayBuffer to base64url string
+function bufferToBase64URL(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// Helper: Convert base64url string to ArrayBuffer
+function base64URLToBuffer(base64url: string): ArrayBuffer {
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = base64.length % 4;
+  const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/admin';
 
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('Yonatan Elias');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  const [loadingType, setLoadingType] = useState<'password' | 'google' | 'passkey' | null>(null);
+  // Emergency Master TOTP state
+  const [showEmergencyTotp, setShowEmergencyTotp] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
+  const totpInputRef = useRef<HTMLInputElement>(null);
+
+  const [loadingType, setLoadingType] = useState<'password' | 'passkey' | 'totp' | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; displayName?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  const validateForm = () => {
-    const errors: { email?: string; password?: string; displayName?: string } = {};
+  useEffect(() => {
+    if (showEmergencyTotp && totpInputRef.current) {
+      totpInputRef.current.focus();
+    }
+  }, [showEmergencyTotp]);
+
+  const validatePasswordForm = () => {
+    const errors: { email?: string; password?: string } = {};
 
     if (!email) {
       errors.email = 'Email address is required';
@@ -43,10 +73,6 @@ function LoginForm() {
       errors.password = 'Password must be at least 6 characters';
     }
 
-    if (authMode === 'signup' && (!displayName || displayName.trim().length < 2)) {
-      errors.displayName = 'Display name must be at least 2 characters';
-    }
-
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -56,50 +82,30 @@ function LoginForm() {
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!validateForm()) {
+    if (!validatePasswordForm()) {
       return;
     }
 
     try {
       setLoadingType('password');
 
-      if (authMode === 'signup') {
-        const res = await fetch('/api/v1/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.toLowerCase().trim(), password, displayName }),
-        });
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
+      });
 
-        const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
+      const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
 
-        if (!res.ok) {
-          throw new Error(data.error || 'Registration failed');
-        }
-
-        setSuccessMsg(data.message || 'Account created successfully! Redirecting...');
-        setTimeout(() => {
-          router.push(redirectTo);
-          router.refresh();
-        }, 1000);
-      } else {
-        const res = await fetch('/api/v1/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
-        });
-
-        const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
-
-        if (!res.ok) {
-          throw new Error(data.error || 'Authentication failed');
-        }
-
-        setSuccessMsg('Authentication successful! Redirecting to admin portal...');
-        setTimeout(() => {
-          router.push(redirectTo);
-          router.refresh();
-        }, 500);
+      if (!res.ok) {
+        throw new Error(data.error || 'Authentication failed');
       }
+
+      setSuccessMsg('Authentication successful! Redirecting to admin portal...');
+      setTimeout(() => {
+        router.push(redirectTo);
+        router.refresh();
+      }, 500);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Authentication failed. Please check your credentials.';
       setErrorMsg(message);
@@ -120,57 +126,68 @@ function LoginForm() {
     try {
       setLoadingType('passkey');
 
-      // 1. Fetch challenge & options from server
-      const optionsRes = await fetch('/api/v1/auth/passkey/register', {
+      // 1. Fetch challenge & options from server assertion endpoint
+      const optionsRes = await fetch('/api/v1/auth/passkey/authenticate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email || undefined }),
+        body: JSON.stringify({ email: email.trim() || undefined }),
       });
 
       const optionsData = await optionsRes.json().catch(() => ({ error: `Server returned status ${optionsRes.status}` }));
       if (!optionsRes.ok || !optionsData.options) {
-        throw new Error(optionsData.error || 'Failed to fetch passkey challenge');
+        throw new Error(optionsData.error || 'Failed to initialize passkey authentication options');
       }
 
       const { options } = optionsData;
 
-      // Convert base64url challenge & user id to Uint8Array buffer
-      const challengeBuffer = Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
-      const userIdBuffer = Uint8Array.from(atob(options.user.id.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+      // Convert challenge from base64url to ArrayBuffer
+      const challengeBuffer = base64URLToBuffer(options.challenge);
 
-      const creationOptions: PublicKeyCredentialCreationOptions = {
+      // Convert allowCredentials IDs if provided
+      const allowCredentials = options.allowCredentials?.map((cred: { id: string; type: PublicKeyCredentialType; transports?: AuthenticatorTransport[] }) => ({
+        ...cred,
+        id: base64URLToBuffer(cred.id),
+      }));
+
+      const assertionOptions: PublicKeyCredentialRequestOptions = {
         ...options,
         challenge: challengeBuffer,
-        user: {
-          ...options.user,
-          id: userIdBuffer,
-        },
+        allowCredentials: allowCredentials || undefined,
       };
 
-      // 2. Invoke WebAuthn browser API
-      const credential = (await navigator.credentials.create({
-        publicKey: creationOptions,
+      // 2. Invoke WebAuthn assertion (navigator.credentials.get)
+      const assertion = (await navigator.credentials.get({
+        publicKey: assertionOptions,
       })) as PublicKeyCredential | null;
 
-      if (!credential) {
+      if (!assertion) {
         throw new Error('No passkey credential returned by authenticator');
       }
 
-      // 3. Verify passkey on server
-      const verifyRes = await fetch('/api/v1/auth/passkey/verify', {
+      const assertionResponse = assertion.response as AuthenticatorAssertionResponse;
+
+      // 3. Format payload matching passkeyAssertionSchema
+      const credentialPayload = {
+        id: assertion.id,
+        rawId: bufferToBase64URL(assertion.rawId),
+        type: assertion.type,
+        response: {
+          authenticatorData: bufferToBase64URL(assertionResponse.authenticatorData),
+          clientDataJSON: bufferToBase64URL(assertionResponse.clientDataJSON),
+          signature: bufferToBase64URL(assertionResponse.signature),
+          userHandle: assertionResponse.userHandle ? bufferToBase64URL(assertionResponse.userHandle) : undefined,
+        },
+      };
+
+      // 4. Verify passkey assertion on server
+      const verifyRes = await fetch('/api/v1/auth/passkey/authenticate/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          credential: {
-            id: credential.id,
-            rawId: credential.id,
-            type: credential.type,
-          },
-        }),
+        body: JSON.stringify({ credential: credentialPayload }),
       });
 
       const verifyData = await verifyRes.json().catch(() => ({ error: `Server returned status ${verifyRes.status}` }));
-      if (!verifyRes.ok || !verifyData.verified) {
+      if (!verifyRes.ok || (!verifyData.verified && !verifyData.success)) {
         throw new Error(verifyData.error || 'Passkey verification failed');
       }
 
@@ -178,7 +195,7 @@ function LoginForm() {
       setTimeout(() => {
         router.push(redirectTo);
         router.refresh();
-      }, 600);
+      }, 500);
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'NotAllowedError') {
         setErrorMsg('Passkey prompt was dismissed or canceled.');
@@ -186,6 +203,53 @@ function LoginForm() {
         const message = err instanceof Error ? err.message : 'Passkey authentication failed.';
         setErrorMsg(message);
       }
+    } finally {
+      setLoadingType(null);
+    }
+  };
+
+  const handleTotpAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail) {
+      setErrorMsg('Please enter your email address to use master TOTP access');
+      return;
+    }
+
+    const cleanCode = totpCode.trim();
+    if (!cleanCode || cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
+      setErrorMsg('Please enter a valid 6-digit numeric TOTP code');
+      return;
+    }
+
+    try {
+      setLoadingType('totp');
+
+      const res = await fetch('/api/v1/auth/totp/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: cleanEmail,
+          totpCode: cleanCode,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
+      if (!res.ok) {
+        throw new Error(data.error || 'Master TOTP code verification failed');
+      }
+
+      setSuccessMsg('Emergency master key authenticated! Redirecting...');
+      setTimeout(() => {
+        router.push(redirectTo);
+        router.refresh();
+      }, 500);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Master TOTP login failed.';
+      setErrorMsg(message);
     } finally {
       setLoadingType(null);
     }
@@ -217,49 +281,8 @@ function LoginForm() {
         <div className={styles.cardHeader}>
           <div className={styles.logoBadge}>YE</div>
           <h1 className={styles.cardTitle}>Admin Portal</h1>
-          <p className={styles.cardSubtitle}>
-            {authMode === 'signup'
-              ? 'Create your administrator credentials'
-              : 'Secure administration & profile management'}
-          </p>
+          <p className={styles.cardSubtitle}>Secure administration & profile management</p>
         </div>
-
-        {/* Tab Switcher: Sign In vs Sign Up */}
-        <div className={styles.tabGroup}>
-          <button
-            type="button"
-            className={`${styles.tabButton} ${authMode === 'signin' ? styles.activeTab : ''}`}
-            onClick={() => {
-              setAuthMode('signin');
-              setErrorMsg(null);
-              setSuccessMsg(null);
-              setFieldErrors({});
-            }}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabButton} ${authMode === 'signup' ? styles.activeTab : ''}`}
-            onClick={() => {
-              setAuthMode('signup');
-              setErrorMsg(null);
-              setSuccessMsg(null);
-              setFieldErrors({});
-            }}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        {authMode === 'signup' && (
-          <div className={styles.adminNotice}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            <span>Admin account creation for authorized platform users</span>
-          </div>
-        )}
 
         {errorMsg && (
           <div className={styles.alertError} role="alert">
@@ -283,59 +306,31 @@ function LoginForm() {
         )}
 
         {/* Quick Passkey Authentication */}
-        {authMode === 'signin' && (
-          <>
-            <div className={styles.authButtonGroup}>
-              <button
-                type="button"
-                className={styles.passkeyButton}
-                onClick={handlePasskeyLogin}
-                disabled={loadingType !== null}
-              >
-                {loadingType === 'passkey' ? (
-                  <div className={styles.spinner} />
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="10" r="3" />
-                    <path d="M12 2a8 8 0 0 0-8 8c0 1.89.66 3.63 1.76 5L12 22l6.24-7c1.1-1.37 1.76-3.11 1.76-5a8 8 0 0 0-8-8z" />
-                  </svg>
-                )}
-                <span>Sign in with Passkey / WebAuthn</span>
-              </button>
-            </div>
+        <div className={styles.authButtonGroup}>
+          <button
+            type="button"
+            className={styles.passkeyButton}
+            onClick={handlePasskeyLogin}
+            disabled={loadingType !== null}
+          >
+            {loadingType === 'passkey' ? (
+              <div className={styles.spinner} />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="10" r="3" />
+                <path d="M12 2a8 8 0 0 0-8 8c0 1.89.66 3.63 1.76 5L12 22l6.24-7c1.1-1.37 1.76-3.11 1.76-5a8 8 0 0 0-8-8z" />
+              </svg>
+            )}
+            <span>Sign in with Passkey / WebAuthn</span>
+          </button>
+        </div>
 
-            <div className={styles.divider}>
-              <span className={styles.dividerText}>or continue with password</span>
-            </div>
-          </>
-        )}
+        <div className={styles.divider}>
+          <span className={styles.dividerText}>or continue with password</span>
+        </div>
 
         {/* Credentials Form */}
         <form className={styles.form} onSubmit={handlePasswordAuth} noValidate suppressHydrationWarning>
-          {authMode === 'signup' && (
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="displayName">
-                Full Name
-              </label>
-              <div className={styles.inputWrapper} suppressHydrationWarning>
-                <input
-                  id="displayName"
-                  type="text"
-                  className={`${styles.input} ${fieldErrors.displayName ? styles.inputError : ''}`}
-                  placeholder="Yonatan Elias"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  autoComplete="name"
-                  disabled={loadingType !== null}
-                  suppressHydrationWarning
-                />
-              </div>
-              {fieldErrors.displayName && (
-                <span className={styles.errorMessage}>{fieldErrors.displayName}</span>
-              )}
-            </div>
-          )}
-
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor="email">
               Email Address
@@ -345,7 +340,7 @@ function LoginForm() {
                 id="email"
                 type="email"
                 className={`${styles.input} ${fieldErrors.email ? styles.inputError : ''}`}
-                placeholder={authMode === 'signup' ? 'yonatane504@gmail.com' : 'yonatan@yonatanelias.dpdns.org'}
+                placeholder="yonatan@yonatanelias.dpdns.org"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -370,7 +365,7 @@ function LoginForm() {
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
+                autoComplete="current-password"
                 disabled={loadingType !== null}
                 suppressHydrationWarning
               />
@@ -406,13 +401,88 @@ function LoginForm() {
             {loadingType === 'password' ? (
               <>
                 <div className={styles.spinner} />
-                <span>{authMode === 'signup' ? 'Creating Administrator Account...' : 'Signing in...'}</span>
+                <span>Signing in...</span>
               </>
             ) : (
-              <span>{authMode === 'signup' ? 'Register Admin Account' : 'Sign In to Admin'}</span>
+              <span>Sign In to Admin</span>
             )}
           </button>
         </form>
+
+        {/* Collapsible Emergency Master Access Section */}
+        <div className={styles.emergencyContainer}>
+          <button
+            type="button"
+            className={styles.emergencyToggle}
+            onClick={() => {
+              setShowEmergencyTotp(!showEmergencyTotp);
+              setErrorMsg(null);
+            }}
+            aria-expanded={showEmergencyTotp}
+          >
+            <div className={styles.emergencyToggleLabel}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>Emergency Master Access</span>
+            </div>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                transform: showEmergencyTotp ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+              }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          {showEmergencyTotp && (
+            <div className={styles.emergencyPanel}>
+              <p className={styles.emergencyHint}>
+                Use your 6-digit rolling TOTP master authenticator code for emergency recovery access. Email above is required.
+              </p>
+              <form onSubmit={handleTotpAuth} className={styles.emergencyForm}>
+                <div className={styles.totpInputGroup}>
+                  <input
+                    ref={totpInputRef}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                    className={styles.totpInput}
+                    placeholder="000000"
+                    value={totpCode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setTotpCode(val);
+                    }}
+                    disabled={loadingType !== null}
+                  />
+                  <button
+                    type="submit"
+                    className={styles.emergencySubmitBtn}
+                    disabled={loadingType !== null || totpCode.length !== 6}
+                  >
+                    {loadingType === 'totp' ? (
+                      <div className={styles.spinner} style={{ width: '14px', height: '14px' }} />
+                    ) : (
+                      'Verify & Enter'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
 
         <div className={styles.cardFooter}>
           <Link href="/" className={styles.backLink}>
@@ -448,4 +518,3 @@ export default function AdminLoginPage() {
     </Suspense>
   );
 }
-

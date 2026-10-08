@@ -54,6 +54,22 @@
   box-shadow: 0 0 8px #10b981;
 }
 
+.sectionCategoryTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0.5rem 0 0.15rem 0;
+}
+
+.sectionCategoryDesc {
+  font-size: 0.825rem;
+  color: #94a3b8;
+  margin: 0 0 0.25rem 0;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -140,7 +156,6 @@
   padding: 0.625rem 0.875rem;
   color: #f9fafb;
   font-size: 0.875rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -148,6 +163,10 @@
 .input:focus {
   border-color: #6366f1;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.inputMonospace {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .inputWithBtn {
@@ -171,6 +190,22 @@
 .toggleRevealBtn:hover {
   color: #f9fafb;
   background: rgba(255, 255, 255, 0.05);
+}
+
+.selectInput {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--admin-border, #1f2937);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  color: #f9fafb;
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.selectInput:focus {
+  border-color: #6366f1;
 }
 
 .helperText {
@@ -205,6 +240,248 @@
   cursor: not-allowed;
 }
 
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.875rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  color: #e2e8f0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Password Strength Meter */
+.strengthMeter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.strengthBars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+  height: 4px;
+}
+
+.strengthSegment {
+  height: 100%;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background-color 0.2s ease;
+}
+
+.strengthSegmentActiveWeak {
+  background: #ef4444;
+}
+
+.strengthSegmentActiveMedium {
+  background: #f59e0b;
+}
+
+.strengthSegmentActiveStrong {
+  background: #10b981;
+}
+
+.strengthSegmentActiveVeryStrong {
+  background: #06b6d4;
+}
+
+.strengthLabel {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* TOTP Setup Section */
+.totpActiveCard {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.totpStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.activeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.totpSetupBox {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.totpQrWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 0.5rem;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.totpQrImage {
+  width: 180px;
+  height: 180px;
+  display: block;
+}
+
+.secretBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  color: #93c5fd;
+  word-break: break-all;
+}
+
+.copyBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+}
+
+.copyBtn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.totpConfirmForm {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Passkeys List */
+.passkeyList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.passkeyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+  transition: border-color 0.15s ease;
+}
+
+.passkeyItem:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.passkeyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.passkeyName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.passkeyMeta {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.emptyState {
+  padding: 1.5rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+}
+
+/* Generated Invite Banner */
+.inviteUrlBanner {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.inviteUrlTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #a5b4fc;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inviteUrlInputRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Tables */
 .tableWrapper {
   overflow-x: auto;
   border: 1px solid var(--admin-border, #1f2937);
@@ -252,6 +529,65 @@
   background: rgba(99, 102, 241, 0.1);
   color: #a5b4fc;
   border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badgeActive {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+.badgeUsed {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+.badgeExpired {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.badgeRevoked {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #94a3b8;
+}
+
+/* Event badges */
+.eventBadge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #c7d2fe;
+}
+
+.eventBadgeSuccess {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+}
+
+.eventBadgeFailure {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
 }
 
 .deleteBtn {
