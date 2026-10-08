@@ -12,6 +12,7 @@ import {
   type SecurityEvent,
 } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { createServerClient } from '@supabase/ssr';
 import type { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
 
 // ============================================================
@@ -861,17 +862,36 @@ export class AuthService {
         (linkData as any)?.hashed_token;
 
       if (!linkError && tokenHash) {
-        const supabase = await createClient();
-        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'magiclink',
-        });
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey =
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+          process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+          process.env.SUPABASE_ANON_KEY ||
+          '';
 
-        if (!verifyError && verifyData) {
-          session = verifyData.session;
-          authUser = verifyData.user;
-        } else if (verifyError) {
-          console.warn('Server verifyOtp error in loginWithTotp:', verifyError.message);
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createServerClient(supabaseUrl, supabaseKey, {
+            cookies: {
+              getAll() {
+                return [];
+              },
+              setAll() {
+                // In-memory cookie handling
+              },
+            },
+          });
+
+          const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'magiclink',
+          });
+
+          if (!verifyError && verifyData) {
+            session = verifyData.session;
+            authUser = verifyData.user;
+          } else if (verifyError) {
+            console.warn('Server verifyOtp error in loginWithTotp:', verifyError.message);
+          }
         }
       } else if (linkError) {
         console.warn('Admin generateLink error in loginWithTotp:', linkError.message);

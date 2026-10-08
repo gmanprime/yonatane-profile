@@ -6,7 +6,6 @@ import { db } from '@/lib/db';
 import { users, passkeys } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createClient } from '@/lib/supabase/server';
 import { getErrorMessage } from '@/lib/utils/error';
 
 export async function POST(req: NextRequest) {
@@ -62,7 +61,18 @@ export async function POST(req: NextRequest) {
 
     // 4. Create active session on SSR client cookies via Supabase Admin magiclink
     const admin = createAdminClient();
-    let session = null;
+    let session: any = null;
+
+    const response = NextResponse.json({
+      success: true,
+      verified: true,
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        displayName: dbUser.displayName,
+      },
+      session: null as any,
+    });
 
     try {
       const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
@@ -75,18 +85,43 @@ export async function POST(req: NextRequest) {
         (linkData as any)?.hashed_token;
 
       if (!linkError && tokenHash) {
-        const supabase = await createClient();
-        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'magiclink',
-        });
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey =
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+          process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+          process.env.SUPABASE_ANON_KEY ||
+          '';
 
-        if (!verifyError && verifyData) {
-          session = verifyData.session;
-          if (verifyData.user) {
-            await AuthService.syncUser(verifyData.user);
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createServerClient(supabaseUrl, supabaseKey, {
+            cookies: {
+              getAll() {
+                return req.cookies.getAll();
+              },
+              setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+                cookiesToSet.forEach(({ name, value, options }) => {
+                  response.cookies.set(name, value, options);
+                });
+              },
+            },
+          });
+
+          const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'magiclink',
+          });
+
+          if (!verifyError && verifyData?.session) {
+            session = verifyData.session;
+            if (verifyData.user) {
+              await AuthService.syncUser(verifyData.user);
+            }
+          } else if (verifyError) {
+            console.warn('[PASSKEY_VERIFY_API] Server verifyOtp error:', verifyError.message);
           }
         }
+      } else if (linkError) {
+        console.warn('[PASSKEY_VERIFY_API] Admin generateLink error:', linkError.message);
       }
     } catch (sessionErr) {
       console.warn('Passkey authentication session creation warning:', sessionErr);
@@ -104,7 +139,8 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const response = NextResponse.json({
+    // Update response body with final session
+    const responsePayload = {
       success: true,
       verified: true,
       user: {
@@ -113,38 +149,13 @@ export async function POST(req: NextRequest) {
         displayName: dbUser.displayName,
       },
       session,
+    };
+
+    console.log(`[PASSKEY_VERIFY_API] User: ${dbUser.email} | Session issued: ${Boolean(session)} | Cookies set: ${response.cookies.getAll().map(c => c.name).join(', ')}`);
+
+    return NextResponse.json(responsePayload, {
+      headers: response.headers,
     });
-
-    if (session) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey =
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.SUPABASE_ANON_KEY ||
-        '';
-
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createServerClient(supabaseUrl, supabaseKey, {
-          cookies: {
-            getAll() {
-              return req.cookies.getAll();
-            },
-            setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                response.cookies.set(name, value, options);
-              });
-            },
-          },
-        });
-
-        await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
-      }
-    }
-
-    return response;
   } catch (error: unknown) {
     return NextResponse.json(
       { error: getErrorMessage(error, 'Passkey authentication failed') },

@@ -202,22 +202,24 @@ function LoginForm() {
         throw new Error(verifyData.error || 'Passkey verification failed');
       }
 
-      if (verifyData.session) {
-        try {
-          console.log('[PASSKEY_LOGIN_CLIENT] Setting session on browser client...');
-          const supabase = createClient();
-          const { error: clientSessionError } = await supabase.auth.setSession({
-            access_token: verifyData.session.access_token,
-            refresh_token: verifyData.session.refresh_token,
-          });
-          if (clientSessionError) {
-            console.warn('[PASSKEY_LOGIN_CLIENT] Browser setSession warning:', clientSessionError);
-          } else {
-            console.log('[PASSKEY_LOGIN_CLIENT] Browser session established.');
-          }
-        } catch (sessionSyncErr) {
-          console.warn('[PASSKEY_LOGIN_CLIENT] Browser session sync notice:', sessionSyncErr);
+      if (!verifyData.session) {
+        throw new Error('Authentication verified, but server did not issue an active session token. Please try again.');
+      }
+
+      try {
+        console.log('[PASSKEY_LOGIN_CLIENT] Setting session on browser client...');
+        const supabase = createClient();
+        const { error: clientSessionError } = await supabase.auth.setSession({
+          access_token: verifyData.session.access_token,
+          refresh_token: verifyData.session.refresh_token,
+        });
+        if (clientSessionError) {
+          console.warn('[PASSKEY_LOGIN_CLIENT] Browser setSession warning:', clientSessionError);
+        } else {
+          console.log('[PASSKEY_LOGIN_CLIENT] Browser session established.');
         }
+      } catch (sessionSyncErr) {
+        console.warn('[PASSKEY_LOGIN_CLIENT] Browser session sync notice:', sessionSyncErr);
       }
 
       setSuccessMsg('Passkey verified! Redirecting to admin portal...');
@@ -275,24 +277,24 @@ function LoginForm() {
         throw new Error(data.error || 'Master TOTP code verification failed');
       }
 
-      if (data.session) {
-        try {
-          console.log('[TOTP_LOGIN_CLIENT] Setting session on browser Supabase client...');
-          const supabase = createClient();
-          const { error: clientSessionError } = await supabase.auth.setSession({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token,
-          });
-          if (clientSessionError) {
-            console.warn('[TOTP_LOGIN_CLIENT] Browser setSession warning:', clientSessionError);
-          } else {
-            console.log('[TOTP_LOGIN_CLIENT] Browser session confirmed established.');
-          }
-        } catch (sessionSyncErr) {
-          console.warn('[TOTP_LOGIN_CLIENT] Browser session sync notice:', sessionSyncErr);
+      if (!data.session) {
+        throw new Error('Master TOTP verified, but server did not issue an active session token. Please try again.');
+      }
+
+      try {
+        console.log('[TOTP_LOGIN_CLIENT] Setting session on browser Supabase client...');
+        const supabase = createClient();
+        const { error: clientSessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        if (clientSessionError) {
+          console.warn('[TOTP_LOGIN_CLIENT] Browser setSession warning:', clientSessionError);
+        } else {
+          console.log('[TOTP_LOGIN_CLIENT] Browser session confirmed established.');
         }
-      } else {
-        console.warn('[TOTP_LOGIN_CLIENT] Warning: data.session is null or missing in response!');
+      } catch (sessionSyncErr) {
+        console.warn('[TOTP_LOGIN_CLIENT] Browser session sync notice:', sessionSyncErr);
       }
 
       setSuccessMsg('Emergency master key authenticated! Redirecting...');
