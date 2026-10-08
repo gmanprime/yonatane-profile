@@ -188,7 +188,7 @@ function LoginForm() {
         },
       };
 
-      // 4. Verify passkey assertion on server
+      console.log('[PASSKEY_LOGIN_CLIENT] Verifying assertion with server...');
       const verifyRes = await fetch('/api/v1/auth/passkey/authenticate/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,27 +196,37 @@ function LoginForm() {
       });
 
       const verifyData = await verifyRes.json().catch(() => ({ error: `Server returned status ${verifyRes.status}` }));
+      console.log('[PASSKEY_LOGIN_CLIENT] Verify response status:', verifyRes.status, 'Payload:', verifyData);
+
       if (!verifyRes.ok || (!verifyData.verified && !verifyData.success)) {
         throw new Error(verifyData.error || 'Passkey verification failed');
       }
 
       if (verifyData.session) {
         try {
+          console.log('[PASSKEY_LOGIN_CLIENT] Setting session on browser client...');
           const supabase = createClient();
-          await supabase.auth.setSession({
+          const { error: clientSessionError } = await supabase.auth.setSession({
             access_token: verifyData.session.access_token,
             refresh_token: verifyData.session.refresh_token,
           });
+          if (clientSessionError) {
+            console.warn('[PASSKEY_LOGIN_CLIENT] Browser setSession warning:', clientSessionError);
+          } else {
+            console.log('[PASSKEY_LOGIN_CLIENT] Browser session established.');
+          }
         } catch (sessionSyncErr) {
-          console.warn('Browser session sync notice:', sessionSyncErr);
+          console.warn('[PASSKEY_LOGIN_CLIENT] Browser session sync notice:', sessionSyncErr);
         }
       }
 
       setSuccessMsg('Passkey verified! Redirecting to admin portal...');
       setTimeout(() => {
+        console.log('[PASSKEY_LOGIN_CLIENT] Navigating to:', redirectTo);
         window.location.href = redirectTo;
-      }, 400);
+      }, 500);
     } catch (err: unknown) {
+      console.error('[PASSKEY_LOGIN_CLIENT] Error:', err);
       if (err instanceof Error && err.name === 'NotAllowedError') {
         setErrorMsg('Passkey prompt was dismissed or canceled.');
       } else {
@@ -248,6 +258,7 @@ function LoginForm() {
     try {
       setLoadingType('totp');
 
+      console.log('[TOTP_LOGIN_CLIENT] Sending request to /api/v1/auth/totp/login for email:', cleanEmail);
       const res = await fetch('/api/v1/auth/totp/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -258,28 +269,40 @@ function LoginForm() {
       });
 
       const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
+      console.log('[TOTP_LOGIN_CLIENT] Response status:', res.status, 'Response payload:', data);
+
       if (!res.ok) {
         throw new Error(data.error || 'Master TOTP code verification failed');
       }
 
       if (data.session) {
         try {
+          console.log('[TOTP_LOGIN_CLIENT] Setting session on browser Supabase client...');
           const supabase = createClient();
-          await supabase.auth.setSession({
+          const { error: clientSessionError } = await supabase.auth.setSession({
             access_token: data.session.access_token,
             refresh_token: data.session.refresh_token,
           });
+          if (clientSessionError) {
+            console.warn('[TOTP_LOGIN_CLIENT] Browser setSession warning:', clientSessionError);
+          } else {
+            console.log('[TOTP_LOGIN_CLIENT] Browser session confirmed established.');
+          }
         } catch (sessionSyncErr) {
-          console.warn('Browser session sync notice:', sessionSyncErr);
+          console.warn('[TOTP_LOGIN_CLIENT] Browser session sync notice:', sessionSyncErr);
         }
+      } else {
+        console.warn('[TOTP_LOGIN_CLIENT] Warning: data.session is null or missing in response!');
       }
 
       setSuccessMsg('Emergency master key authenticated! Redirecting...');
       setTimeout(() => {
+        console.log('[TOTP_LOGIN_CLIENT] Navigating to:', redirectTo);
         window.location.href = redirectTo;
-      }, 400);
+      }, 500);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Master TOTP login failed.';
+      console.error('[TOTP_LOGIN_CLIENT] Error during TOTP login:', err);
       setErrorMsg(message);
     } finally {
       setLoadingType(null);

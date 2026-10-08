@@ -52,11 +52,15 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        await supabase.auth.setSession({
+        const setSessionRes = await supabase.auth.setSession({
           access_token: result.session.access_token,
           refresh_token: result.session.refresh_token,
         });
+
+        console.log(`[TOTP_LOGIN_API] User: ${result.user.email} | SetSession error: ${setSessionRes.error?.message || 'NONE'} | Cookies set on response: ${response.cookies.getAll().map(c => c.name).join(', ')}`);
       }
+    } else {
+      console.warn(`[TOTP_LOGIN_API] User ${result.user.email} authenticated TOTP but session is NULL!`);
     }
 
     return response;
