@@ -50,6 +50,7 @@ function LoginForm() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [resetModalError, setResetModalError] = useState<string | null>(null);
 
   const [loadingType, setLoadingType] = useState<'password' | 'passkey' | 'totp' | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -287,28 +288,29 @@ function LoginForm() {
 
   const handlePasswordRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
+    setResetModalError(null);
     setErrorMsg(null);
     setSuccessMsg(null);
 
     const cleanEmail = email.toLowerCase().trim();
     if (!cleanEmail) {
-      setErrorMsg('Please enter your account email address');
+      setResetModalError('Please enter your account email address');
       return;
     }
 
     const cleanCode = resetTotpCode.trim();
     if (!cleanCode || cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
-      setErrorMsg('Please enter a valid 6-digit numeric Master TOTP code');
+      setResetModalError('Please enter a valid 6-digit numeric Master TOTP code');
       return;
     }
 
     if (newPassword.length < 8) {
-      setErrorMsg('New password must be at least 8 characters long');
+      setResetModalError('New password must be at least 8 characters long');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMsg('Passwords do not match');
+      setResetModalError('Passwords do not match');
       return;
     }
 
@@ -333,13 +335,14 @@ function LoginForm() {
 
       setSuccessMsg('Password reset successfully! You can now log in with your new password.');
       setShowResetModal(false);
+      setResetModalError(null);
       setResetTotpCode('');
       setNewPassword('');
       setConfirmPassword('');
       setPassword('');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Password recovery failed.';
-      setErrorMsg(message);
+      setResetModalError(message);
     } finally {
       setIsResettingPassword(false);
     }
@@ -644,6 +647,23 @@ function LoginForm() {
               <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginBottom: '1.25rem', lineHeight: 1.5 }}>
                 Enter your account email, your 6-digit rolling TOTP master authenticator code, and a new password.
               </p>
+
+              {resetModalError && (
+                <div
+                  style={{
+                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.35)',
+                    color: '#fca5a5',
+                    borderRadius: '8px',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.82rem',
+                    marginBottom: '1rem',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {resetModalError}
+                </div>
+              )}
 
               <form onSubmit={handlePasswordRecovery} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>

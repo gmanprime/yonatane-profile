@@ -70,10 +70,14 @@ export async function POST(req: NextRequest) {
         email: dbUser.email,
       });
 
-      if (!linkError && linkData?.properties?.hashed_token) {
+      const tokenHash =
+        (linkData as any)?.properties?.hashed_token ||
+        (linkData as any)?.hashed_token;
+
+      if (!linkError && tokenHash) {
         const supabase = await createClient();
         const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: linkData.properties.hashed_token,
+          token_hash: tokenHash,
           type: 'magiclink',
         });
 
