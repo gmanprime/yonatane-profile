@@ -598,6 +598,50 @@ export class AuthService {
   }
 
   /**
+   * Recovers / resets password using Master TOTP code without requiring existing login.
+   */
+  static async recoverPasswordWithTotp(
+    email: string,
+    totpCode: string,
+    newPassword: string
+  ): Promise<{ success: boolean }> {
+    const isValidTotp = await this.verifyTotpCode(totpCode);
+    if (!isValidTotp) {
+      throw new Error('Invalid master TOTP recovery code');
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const [dbUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, normalizedEmail))
+      .limit(1);
+
+    if (!dbUser) {
+      throw new Error(`User with email "${normalizedEmail}" not found`);
+    }
+
+    const admin = createAdminClient();
+    const { error: adminUpdateError } = await admin.auth.admin.updateUserById(
+      dbUser.supabaseAuthId,
+      { password: newPassword }
+    );
+
+    if (adminUpdateError) {
+      throw new Error(adminUpdateError.message);
+    }
+
+    await this.logSecurityEvent(dbUser.id, 'password_change', undefined, undefined, {
+      email: normalizedEmail,
+      method: 'unauthenticated_totp_recovery',
+      description: 'Password reset via Master TOTP recovery',
+    });
+
+    return { success: true };
+  }
+
+  /**
    * Admin sets a temporary password for another user and logs security event.
    */
   static async adminForcePasswordReset(

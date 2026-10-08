@@ -44,6 +44,13 @@ function LoginForm() {
   const [totpCode, setTotpCode] = useState('');
   const totpInputRef = useRef<HTMLInputElement>(null);
 
+  // Master TOTP Password Reset Modal state
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetTotpCode, setResetTotpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
   const [loadingType, setLoadingType] = useState<'password' | 'passkey' | 'totp' | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -278,6 +285,66 @@ function LoginForm() {
     }
   };
 
+  const handlePasswordRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail) {
+      setErrorMsg('Please enter your account email address');
+      return;
+    }
+
+    const cleanCode = resetTotpCode.trim();
+    if (!cleanCode || cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
+      setErrorMsg('Please enter a valid 6-digit numeric Master TOTP code');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setErrorMsg('New password must be at least 8 characters long');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Passwords do not match');
+      return;
+    }
+
+    try {
+      setIsResettingPassword(true);
+
+      const res = await fetch('/api/v1/auth/password/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: cleanEmail,
+          totpCode: cleanCode,
+          newPassword,
+          confirmPassword,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({ error: `Server returned status ${res.status}` }));
+      if (!res.ok) {
+        throw new Error(data.error || 'Password recovery failed');
+      }
+
+      setSuccessMsg('Password reset successfully! You can now log in with your new password.');
+      setShowResetModal(false);
+      setResetTotpCode('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPassword('');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Password recovery failed.';
+      setErrorMsg(message);
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   if (!isMounted) {
     return (
       <div className={styles.loginRoot}>
@@ -414,6 +481,27 @@ function LoginForm() {
             {fieldErrors.password && (
               <span className={styles.errorMessage}>{fieldErrors.password}</span>
             )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.4rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowResetModal(true);
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#60a5fa',
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  padding: 0,
+                  textDecoration: 'none',
+                }}
+              >
+                Forgot password? Reset with Master Key
+              </button>
+            </div>
           </div>
 
           <button
@@ -506,6 +594,198 @@ function LoginForm() {
             </div>
           )}
         </div>
+
+        {/* Reset Password with Master TOTP Modal */}
+        {showResetModal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(6px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '1rem',
+            }}
+          >
+            <div
+              style={{
+                background: '#0d1322',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '12px',
+                padding: '2rem',
+                maxWidth: '440px',
+                width: '100%',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#f8fafc', fontWeight: 600 }}>
+                  Reset Password with Master Key
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    fontSize: '1.25rem',
+                    lineHeight: 1,
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                Enter your account email, your 6-digit rolling TOTP master authenticator code, and a new password.
+              </p>
+
+              <form onSubmit={handlePasswordRecovery} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                    Account Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="yonatane504@gmail.com"
+                    required
+                    style={{
+                      width: '100%',
+                      background: '#080c16',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '6px',
+                      padding: '0.65rem 0.85rem',
+                      color: '#f8fafc',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                    6-Digit Master TOTP Code
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={resetTotpCode}
+                    onChange={(e) => setResetTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    required
+                    style={{
+                      width: '100%',
+                      background: '#080c16',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '6px',
+                      padding: '0.65rem 0.85rem',
+                      color: '#f8fafc',
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.25em',
+                      textAlign: 'center',
+                      fontSize: '1.1rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                    New Password (min 8 chars)
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    required
+                    minLength={8}
+                    style={{
+                      width: '100%',
+                      background: '#080c16',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '6px',
+                      padding: '0.65rem 0.85rem',
+                      color: '#f8fafc',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    required
+                    minLength={8}
+                    style={{
+                      width: '100%',
+                      background: '#080c16',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '6px',
+                      padding: '0.65rem 0.85rem',
+                      color: '#f8fafc',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowResetModal(false)}
+                    style={{
+                      flex: 1,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#cbd5e1',
+                      borderRadius: '6px',
+                      padding: '0.65rem',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isResettingPassword || resetTotpCode.length !== 6 || newPassword.length < 8}
+                    style={{
+                      flex: 2,
+                      background: '#2563eb',
+                      border: 'none',
+                      color: '#ffffff',
+                      borderRadius: '6px',
+                      padding: '0.65rem',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      opacity: (isResettingPassword || resetTotpCode.length !== 6 || newPassword.length < 8) ? 0.6 : 1,
+                    }}
+                  >
+                    {isResettingPassword ? 'Resetting Password...' : 'Reset & Save Password'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         <div className={styles.cardFooter}>
           <Link href="/" className={styles.backLink}>

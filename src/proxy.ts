@@ -89,7 +89,8 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith('/api/v1/auth/passkey/authenticate') ||
       pathname === '/api/v1/auth/invite/validate' ||
       pathname === '/api/v1/auth/invite/register' ||
-      pathname === '/api/v1/auth/totp/login';
+      pathname === '/api/v1/auth/totp/login' ||
+      pathname === '/api/v1/auth/password/recover';
 
     if (!isPublicApi && !user) {
       return NextResponse.json(

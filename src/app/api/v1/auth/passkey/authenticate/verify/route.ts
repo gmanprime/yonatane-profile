@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { passkeyAssertionSchema } from '@/lib/validators/auth.validator';
 import { AuthService } from '@/lib/services/auth.service';
 import { db } from '@/lib/db';
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       verified: true,
       user: {
@@ -109,6 +110,37 @@ export async function POST(req: NextRequest) {
       },
       session,
     });
+
+    if (session) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey =
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        '';
+
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createServerClient(supabaseUrl, supabaseKey, {
+          cookies: {
+            getAll() {
+              return req.cookies.getAll();
+            },
+            setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                response.cookies.set(name, value, options);
+              });
+            },
+          },
+        });
+
+        await supabase.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+        });
+      }
+    }
+
+    return response;
   } catch (error: unknown) {
     return NextResponse.json(
       { error: getErrorMessage(error, 'Passkey authentication failed') },

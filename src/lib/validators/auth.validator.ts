@@ -41,7 +41,7 @@ export const createInviteSchema = z.object({
 
 export type CreateInviteInput = z.infer<typeof createInviteSchema>;
 
-// Password change (self-service or TOTP master recovery)
+// Password change (self-service or TOTP master recovery while logged in)
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().optional(),
@@ -59,6 +59,21 @@ export const changePasswordSchema = z
   });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+// Password reset / recovery via Master TOTP (can be called unauthenticated)
+export const recoverPasswordWithTotpSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    totpCode: z.string().length(6, 'TOTP code must be exactly 6 digits').regex(/^\d{6}$/, 'TOTP code must be numeric'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters long'),
+    confirmPassword: z.string().min(1, 'Please confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type RecoverPasswordWithTotpInput = z.infer<typeof recoverPasswordWithTotpSchema>;
 
 // Admin: force password reset
 export const adminResetPasswordSchema = z.object({
