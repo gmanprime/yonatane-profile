@@ -93,6 +93,8 @@ export default function AdminSettingsPage() {
   // Security Section: Change Password
   // --------------------------------------------------------------------------
   const [currentPassword, setCurrentPassword] = useState('');
+  const [totpRecoveryCode, setTotpRecoveryCode] = useState('');
+  const [useTotpRecovery, setUseTotpRecovery] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -255,10 +257,18 @@ export default function AdminSettingsPage() {
     e.preventDefault();
     setPasswordMessage(null);
 
-    if (!currentPassword) {
-      setPasswordMessage({ type: 'error', text: 'Current password is required.' });
-      return;
+    if (useTotpRecovery) {
+      if (!totpRecoveryCode || totpRecoveryCode.trim().length !== 6) {
+        setPasswordMessage({ type: 'error', text: 'Please enter your 6-digit rolling TOTP code.' });
+        return;
+      }
+    } else {
+      if (!currentPassword) {
+        setPasswordMessage({ type: 'error', text: 'Current password is required.' });
+        return;
+      }
     }
+
     if (newPassword.length < 8) {
       setPasswordMessage({ type: 'error', text: 'New password must be at least 8 characters long.' });
       return;
@@ -273,7 +283,12 @@ export default function AdminSettingsPage() {
       const res = await fetch('/api/v1/auth/password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+        body: JSON.stringify({
+          currentPassword: useTotpRecovery ? undefined : currentPassword,
+          totpRecoveryCode: useTotpRecovery ? totpRecoveryCode.trim() : undefined,
+          newPassword,
+          confirmPassword,
+        }),
       });
 
       const data = await res.json().catch(() => ({ error: `Server error ${res.status}` }));
@@ -281,10 +296,12 @@ export default function AdminSettingsPage() {
         throw new Error(data.error || 'Failed to update password');
       }
 
-      setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
+      setPasswordMessage({ type: 'success', text: 'Password reset and updated successfully!' });
       setCurrentPassword('');
+      setTotpRecoveryCode('');
       setNewPassword('');
       setConfirmPassword('');
+      setUseTotpRecovery(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to change password';
       setPasswordMessage({ type: 'error', text: msg });
@@ -772,17 +789,57 @@ export default function AdminSettingsPage() {
           )}
 
           <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Current Password</label>
-              <input
-                type="password"
-                className={styles.input}
-                placeholder="••••••••••••"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                autoComplete="current-password"
-              />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className={styles.formLabel} style={{ marginBottom: 0 }}>
+                {useTotpRecovery ? 'Master Rolling TOTP Code' : 'Current Password'}
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setUseTotpRecovery(!useTotpRecovery);
+                  setPasswordMessage(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#60a5fa',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  padding: 0,
+                }}
+              >
+                {useTotpRecovery ? '← Use Current Password instead' : 'Forgot password? Recover with Master TOTP'}
+              </button>
             </div>
+
+            {useTotpRecovery ? (
+              <div className={styles.formGroup}>
+                <input
+                  type="text"
+                  maxLength={6}
+                  className={styles.input}
+                  placeholder="6-digit rolling code (e.g. 123456)"
+                  value={totpRecoveryCode}
+                  onChange={(e) => setTotpRecoveryCode(e.target.value.replace(/\D/g, ''))}
+                  autoComplete="one-time-code"
+                />
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                  Enter the active 6-digit rolling code from your authenticator app to authorize this password reset.
+                </span>
+              </div>
+            ) : (
+              <div className={styles.formGroup}>
+                <input
+                  type="password"
+                  className={styles.input}
+                  placeholder="••••••••••••"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+            )}
 
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>New Password</label>

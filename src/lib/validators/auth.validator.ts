@@ -41,15 +41,22 @@ export const createInviteSchema = z.object({
 
 export type CreateInviteInput = z.infer<typeof createInviteSchema>;
 
-// Password change (self-service)
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'New password must be at least 8 characters long'),
-  confirmPassword: z.string().min(1, 'Please confirm your new password'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+// Password change (self-service or TOTP master recovery)
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().optional(),
+    totpRecoveryCode: z.string().length(6, 'TOTP code must be exactly 6 digits').regex(/^\d{6}$/, 'TOTP code must be numeric').optional(),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters long'),
+    confirmPassword: z.string().min(1, 'Please confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+  .refine((data) => Boolean(data.currentPassword) || Boolean(data.totpRecoveryCode), {
+    message: 'Either current password or 6-digit TOTP emergency recovery code is required',
+    path: ['currentPassword'],
+  });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 

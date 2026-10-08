@@ -527,12 +527,13 @@ export class AuthService {
   // ============================================================
 
   /**
-   * Verifies current password via Supabase, then updates to new password and logs security event.
+   * Updates user password. Can be authenticated via current password OR master TOTP recovery code.
    */
   static async changePassword(
     userId: string,
-    currentPassword: string,
-    newPassword: string
+    newPassword: string,
+    currentPassword?: string,
+    totpRecoveryCode?: string
   ): Promise<{ success: boolean }> {
     const [dbUser] = await db
       .select()
@@ -542,6 +543,31 @@ export class AuthService {
 
     if (!dbUser) {
       throw new Error('User not found');
+    }
+
+    const admin = createAdminClient();
+
+    if (totpRecoveryCode) {
+      const isValidTotp = await this.verifyTotpCode(totpRecoveryCode);
+      if (!isValidTotp) {
+        throw new Error('Invalid master TOTP recovery code');
+      }
+      // Update directly via Supabase admin client
+      const { error: adminUpdateError } = await admin.auth.admin.updateUserById(
+        dbUser.supabaseAuthId,
+        { password: newPassword }
+      );
+      if (adminUpdateError) {
+        throw new Error(adminUpdateError.message);
+      }
+      await this.logSecurityEvent(userId, 'password_change', undefined, undefined, {
+        method: 'totp_recovery',
+      });
+      return { success: true };
+    }
+
+    if (!currentPassword) {
+      throw new Error('Either current password or master TOTP recovery code is required');
     }
 
     // Verify current password via Supabase
@@ -716,7 +742,7 @@ export class AuthService {
     let authUser: SupabaseUser | null = null;
 
     try {
-      // Generate magiclink to establish authenticated session on SSR cookies
+      // 1. Generate magiclink
       const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
         type: 'magiclink',
         email: normalizedEmail,
@@ -732,7 +758,11 @@ export class AuthService {
         if (!verifyError && verifyData) {
           session = verifyData.session;
           authUser = verifyData.user;
+        } else if (verifyError) {
+          console.warn('Server verifyOtp error in loginWithTotp:', verifyError.message);
         }
+      } else if (linkError) {
+        console.warn('Admin generateLink error in loginWithTotp:', linkError.message);
       }
     } catch (adminErr) {
       console.warn('TOTP magiclink session generation warning:', adminErr);
@@ -740,7 +770,7 @@ export class AuthService {
 
     if (!authUser) {
       const { data: adminUserData } = await admin.auth.admin.getUserById(dbUser.supabaseAuthId);
-      authUser = adminUserData.user;
+      authUser = adminUserData?.user || null;
     }
 
     const syncedUser = authUser ? await this.syncUser(authUser) : dbUser;

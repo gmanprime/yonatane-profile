@@ -20,11 +20,12 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const { currentPassword, newPassword } = parsed.data;
+    const { currentPassword, totpRecoveryCode, newPassword } = parsed.data;
     await AuthService.changePassword(
       currentUser.dbUser.id,
+      newPassword,
       currentPassword,
-      newPassword
+      totpRecoveryCode
     );
 
     return NextResponse.json({

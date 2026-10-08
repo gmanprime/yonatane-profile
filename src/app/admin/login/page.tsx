@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import styles from './login.module.css';
 
 // Helper: Convert ArrayBuffer to base64url string
@@ -191,11 +192,22 @@ function LoginForm() {
         throw new Error(verifyData.error || 'Passkey verification failed');
       }
 
+      if (verifyData.session) {
+        try {
+          const supabase = createClient();
+          await supabase.auth.setSession({
+            access_token: verifyData.session.access_token,
+            refresh_token: verifyData.session.refresh_token,
+          });
+        } catch (sessionSyncErr) {
+          console.warn('Browser session sync notice:', sessionSyncErr);
+        }
+      }
+
       setSuccessMsg('Passkey verified! Redirecting to admin portal...');
       setTimeout(() => {
-        router.push(redirectTo);
-        router.refresh();
-      }, 500);
+        window.location.href = redirectTo;
+      }, 400);
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'NotAllowedError') {
         setErrorMsg('Passkey prompt was dismissed or canceled.');
@@ -242,11 +254,22 @@ function LoginForm() {
         throw new Error(data.error || 'Master TOTP code verification failed');
       }
 
+      if (data.session) {
+        try {
+          const supabase = createClient();
+          await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+        } catch (sessionSyncErr) {
+          console.warn('Browser session sync notice:', sessionSyncErr);
+        }
+      }
+
       setSuccessMsg('Emergency master key authenticated! Redirecting...');
       setTimeout(() => {
-        router.push(redirectTo);
-        router.refresh();
-      }, 500);
+        window.location.href = redirectTo;
+      }, 400);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Master TOTP login failed.';
       setErrorMsg(message);
