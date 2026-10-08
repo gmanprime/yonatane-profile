@@ -117,14 +117,38 @@ export async function POST(req: NextRequest) {
               await AuthService.syncUser(verifyData.user);
             }
           } else if (verifyError) {
-            console.warn('[PASSKEY_VERIFY_API] Server verifyOtp error:', verifyError.message);
+            console.error('[PASSKEY_VERIFY_API] Server verifyOtp error:', verifyError.message);
+            return NextResponse.json(
+              { error: `Supabase verifyOtp failed: ${verifyError.message}` },
+              { status: 401 }
+            );
           }
+        } else {
+          return NextResponse.json(
+            { error: 'Missing Supabase environment variables on server.' },
+            { status: 500 }
+          );
         }
       } else if (linkError) {
-        console.warn('[PASSKEY_VERIFY_API] Admin generateLink error:', linkError.message);
+        console.error('[PASSKEY_VERIFY_API] Admin generateLink error:', linkError.message);
+        return NextResponse.json(
+          { error: `Supabase generateLink failed: ${linkError.message}` },
+          { status: 401 }
+        );
       }
-    } catch (sessionErr) {
-      console.warn('Passkey authentication session creation warning:', sessionErr);
+    } catch (sessionErr: any) {
+      console.error('[PASSKEY_VERIFY_API] Session creation exception:', sessionErr);
+      return NextResponse.json(
+        { error: `Session creation exception: ${sessionErr?.message || sessionErr}` },
+        { status: 500 }
+      );
+    }
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Server verified passkey but was unable to issue an active session.' },
+        { status: 401 }
+      );
     }
 
     // 5. Audit log
