@@ -59,6 +59,21 @@ export async function POST(req: NextRequest) {
 
         console.log(`[TOTP_LOGIN_API] User: ${result.user.email} | SetSession error: ${setSessionRes.error?.message || 'NONE'} | Cookies set on response: ${response.cookies.getAll().map(c => c.name).join(', ')}`);
       }
+
+      return NextResponse.json(
+        {
+          success: true,
+          user: {
+            id: result.user.id,
+            email: result.user.email,
+            displayName: result.user.displayName,
+          },
+          session: result.session,
+        },
+        {
+          headers: response.headers,
+        }
+      );
     } else {
       console.warn(`[TOTP_LOGIN_API] User ${result.user.email} authenticated TOTP but session is NULL!`);
     }

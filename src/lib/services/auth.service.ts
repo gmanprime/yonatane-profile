@@ -861,6 +861,8 @@ export class AuthService {
         (linkData as any)?.properties?.hashed_token ||
         (linkData as any)?.hashed_token;
 
+      console.log(`[TOTP_LOGIN_SERVICE] generateLink for "${normalizedEmail}" | linkError: ${linkError?.message || 'NONE'} | tokenHash: ${tokenHash ? 'FOUND' : 'MISSING'}`);
+
       if (!linkError && tokenHash) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
         const supabaseKey =
@@ -886,18 +888,29 @@ export class AuthService {
             type: 'magiclink',
           });
 
-          if (!verifyError && verifyData) {
+          console.log(`[TOTP_LOGIN_SERVICE] verifyOtp result | verifyError: ${verifyError?.message || 'NONE'} | session: ${verifyData?.session ? 'FOUND' : 'NULL'}`);
+
+          if (!verifyError && verifyData?.session) {
             session = verifyData.session;
             authUser = verifyData.user;
           } else if (verifyError) {
-            console.warn('Server verifyOtp error in loginWithTotp:', verifyError.message);
+            console.error('[TOTP_LOGIN_SERVICE] Server verifyOtp error:', verifyError.message);
+            throw new Error(`Failed to exchange verification token: ${verifyError.message}`);
           }
+        } else {
+          console.error('[TOTP_LOGIN_SERVICE] Missing Supabase URL or Anon Key in environment!');
+          throw new Error('Supabase client environment keys are not configured.');
         }
       } else if (linkError) {
-        console.warn('Admin generateLink error in loginWithTotp:', linkError.message);
+        console.error('[TOTP_LOGIN_SERVICE] Admin generateLink error:', linkError.message);
+        throw new Error(`Failed to generate authentication link: ${linkError.message}`);
       }
     } catch (adminErr) {
-      console.warn('TOTP magiclink session generation warning:', adminErr);
+      console.error('[TOTP_LOGIN_SERVICE] Exception in loginWithTotp session creation:', adminErr);
+      if (adminErr instanceof Error) {
+        throw adminErr;
+      }
+      throw new Error('Session creation failed during TOTP login.');
     }
 
     if (!authUser) {
