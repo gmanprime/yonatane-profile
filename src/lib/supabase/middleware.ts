@@ -50,10 +50,7 @@ export async function updateSession(request: NextRequest) {
     // Refresh auth token if expired
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser();
-
-    console.log(`[PROXY_AUTH] Path: ${request.nextUrl.pathname} | Cookies Count: ${incomingCookies.length} | HasAuthCookie: ${Boolean(authCookie)} | User: ${user?.email || 'NONE'} | Error: ${userError?.message || 'NONE'}`);
 
     return { supabaseResponse, user };
   } catch (err) {

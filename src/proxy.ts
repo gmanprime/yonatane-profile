@@ -65,7 +65,6 @@ export async function proxy(request: NextRequest) {
       pathname === '/admin/forgot-password';
 
     if (!user && !isAuthPage) {
-      console.log(`[PROXY_GUARD] Unauthenticated request to "${pathname}" -> Redirecting to /admin/login`);
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('redirectTo', pathname);
       const redirectResponse = NextResponse.redirect(loginUrl, 302);
@@ -77,7 +76,6 @@ export async function proxy(request: NextRequest) {
     }
 
     if (user && isAuthPage) {
-      console.log(`[PROXY_GUARD] Authenticated user "${user.email}" on auth page "${pathname}" -> Redirecting to /admin`);
       const dashboardUrl = new URL('/admin', request.url);
       const redirectResponse = NextResponse.redirect(dashboardUrl, 302);
       supabaseResponse.cookies.getAll().forEach(cookie => {
@@ -86,7 +84,6 @@ export async function proxy(request: NextRequest) {
       return redirectResponse;
     }
 
-    console.log(`[PROXY_GUARD] Allowing access to "${pathname}" | User: ${user?.email || 'ANONYMOUS'}`);
     return supabaseResponse;
   }
 

@@ -52,12 +52,10 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        const setSessionRes = await supabase.auth.setSession({
+        await supabase.auth.setSession({
           access_token: result.session.access_token,
           refresh_token: result.session.refresh_token,
         });
-
-        console.log(`[TOTP_LOGIN_API] User: ${result.user.email} | SetSession error: ${setSessionRes.error?.message || 'NONE'} | Cookies set on response: ${response.cookies.getAll().map(c => c.name).join(', ')}`);
       }
 
       return NextResponse.json(

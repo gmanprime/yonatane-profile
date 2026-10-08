@@ -175,8 +175,6 @@ export async function POST(req: NextRequest) {
       session,
     };
 
-    console.log(`[PASSKEY_VERIFY_API] User: ${dbUser.email} | Session issued: ${Boolean(session)} | Cookies set: ${response.cookies.getAll().map(c => c.name).join(', ')}`);
-
     return NextResponse.json(responsePayload, {
       headers: response.headers,
     });
